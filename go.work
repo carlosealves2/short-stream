@@ -1,0 +1,10 @@
+go 1.25.3
+
+use (
+	./apps/auth_service
+	./apps/notification_service
+	./apps/video_conversor
+	./apps/video_metadata_service
+	./apps/video_uploader
+	./packages/go-commons
+)
