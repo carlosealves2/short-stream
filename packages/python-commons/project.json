@@ -1,0 +1,36 @@
+{
+  "name": "python-commons",
+  "sourceRoot": "packages/python-commons",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run pytest",
+        "cwd": "packages/python-commons"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run ruff check .",
+        "cwd": "packages/python-commons"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run black .",
+        "cwd": "packages/python-commons"
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run mypy .",
+        "cwd": "packages/python-commons"
+      }
+    }
+  },
+  "tags": ["type:lib", "lang:python", "scope:shared"]
+}
