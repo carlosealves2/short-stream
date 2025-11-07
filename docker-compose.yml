@@ -1,0 +1,308 @@
+services:
+  # Infrastructure Services
+  postgres:
+    image: postgres:16-alpine
+    container_name: short-stream-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: short_stream
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - short-stream-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: short-stream-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - short-stream-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: short-stream-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - short-stream-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: short-stream-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - short-stream-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Go Services
+  auth-service:
+    build:
+      context: .
+      dockerfile: apps/auth_service/Dockerfile
+    container_name: short-stream-auth-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/short_stream
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-secret-key
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: apps/notification_service/Dockerfile
+    container_name: short-stream-notification-service
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:rabbitmq@rabbitmq:5672/
+      SMTP_HOST: smtp.example.com
+      SMTP_PORT: 587
+    ports:
+      - "8002:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+  video-conversor:
+    build:
+      context: .
+      dockerfile: apps/video_conversor/Dockerfile
+    container_name: short-stream-video-conversor
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:rabbitmq@rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    ports:
+      - "8003:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+  video-metadata-service:
+    build:
+      context: .
+      dockerfile: apps/video_metadata_service/Dockerfile
+    container_name: short-stream-video-metadata-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/short_stream
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8004:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+  video-uploader:
+    build:
+      context: .
+      dockerfile: apps/video_uploader/Dockerfile
+    container_name: short-stream-video-uploader
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      RABBITMQ_URL: amqp://rabbitmq:rabbitmq@rabbitmq:5672/
+    ports:
+      - "8005:8000"
+    depends_on:
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+  # Python Services
+  video-auto-legend:
+    build:
+      context: .
+      dockerfile: apps/video_auto_legend/Dockerfile
+    container_name: short-stream-video-auto-legend
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:rabbitmq@rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    ports:
+      - "8006:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+  video-schene-analyzer:
+    build:
+      context: .
+      dockerfile: apps/video_schene_analyzer/Dockerfile
+    container_name: short-stream-video-schene-analyzer
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:rabbitmq@rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    ports:
+      - "8007:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+  moderation-service:
+    build:
+      context: .
+      dockerfile: apps/moderation_service/Dockerfile
+    container_name: short-stream-moderation-service
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:rabbitmq@rabbitmq:5672/
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/short_stream
+    ports:
+      - "8008:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+  # Node Services
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    container_name: short-stream-gateway
+    environment:
+      NODE_ENV: production
+      AUTH_SERVICE_URL: http://auth-service:8000
+      VIDEO_METADATA_SERVICE_URL: http://video-metadata-service:8000
+      VIDEO_FEED_PROVIDER_URL: http://video-feed-provider:3000
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      video-metadata-service:
+        condition: service_started
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+  video-feed-provider:
+    build:
+      context: .
+      dockerfile: apps/video_feed_provider/Dockerfile
+    container_name: short-stream-video-feed-provider
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/short_stream
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3001:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: short-stream-frontend
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_GATEWAY_URL: http://localhost:3000
+    ports:
+      - "3002:3000"
+    depends_on:
+      gateway:
+        condition: service_started
+    networks:
+      - short-stream-network
+    restart: unless-stopped
+
+networks:
+  short-stream-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:

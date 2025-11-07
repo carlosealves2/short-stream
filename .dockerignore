@@ -1,0 +1,85 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies
+**/node_modules
+**/.pnp
+**/.pnp.js
+
+# Testing
+**/*_test.go
+**/*_test.py
+**/test
+**/tests
+**/__tests__
+**/*.test.js
+**/*.test.ts
+**/*.spec.js
+**/*.spec.ts
+**/coverage
+**/.coverage
+**/htmlcov
+**/.pytest_cache
+**/.mypy_cache
+
+# Build outputs
+**/dist
+**/.next
+**/out
+**/.turbo
+**/.nx
+
+# Python
+**/__pycache__
+**/*.py[cod]
+**/*$py.class
+**/*.so
+**/.Python
+**/venv
+**/env
+**/.venv
+**/.uv
+
+# Go
+**/go.sum
+**/*.exe
+**/*.test
+**/*.out
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.*.local
+
+# IDE
+**/.vscode
+**/.idea
+**/*.swp
+**/*.swo
+**/*~
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# CI/CD
+.github
+**/.github
+
+# Documentation
+*.md
+!README.md
+**/docs
+
+# Logs
+**/*.log
+**/logs
+**/*.log.*
+
+# Temporary files
+**/tmp
+**/temp
+**/.tmp
+**/.temp
