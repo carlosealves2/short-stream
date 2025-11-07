@@ -1,0 +1,16 @@
+{
+  "apps/auth_service": "0.1.0",
+  "apps/notification_service": "0.1.0",
+  "apps/video_conversor": "0.1.0",
+  "apps/video_metadata_service": "0.1.0",
+  "apps/video_uploader": "0.1.0",
+  "apps/video_auto_legend": "0.1.0",
+  "apps/video_schene_analyzer": "0.1.0",
+  "apps/moderation_service": "0.1.0",
+  "apps/gateway": "0.1.0",
+  "apps/video_feed_provider": "0.1.0",
+  "apps/frontend": "0.1.0",
+  "packages/go-commons": "0.1.0",
+  "packages/python-commons": "0.1.0",
+  "packages/node-commons": "0.1.0"
+}

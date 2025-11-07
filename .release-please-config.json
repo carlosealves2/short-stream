@@ -1,0 +1,172 @@
+{
+  "packages": {
+    "apps/auth_service": {
+      "release-type": "go",
+      "package-name": "auth-service",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["go.mod"]
+    },
+    "apps/notification_service": {
+      "release-type": "go",
+      "package-name": "notification-service",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["go.mod"]
+    },
+    "apps/video_conversor": {
+      "release-type": "go",
+      "package-name": "video-conversor",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["go.mod"]
+    },
+    "apps/video_metadata_service": {
+      "release-type": "go",
+      "package-name": "video-metadata-service",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["go.mod"]
+    },
+    "apps/video_uploader": {
+      "release-type": "go",
+      "package-name": "video-uploader",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["go.mod"]
+    },
+    "apps/video_auto_legend": {
+      "release-type": "python",
+      "package-name": "video-auto-legend",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["pyproject.toml"]
+    },
+    "apps/video_schene_analyzer": {
+      "release-type": "python",
+      "package-name": "video-schene-analyzer",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["pyproject.toml"]
+    },
+    "apps/moderation_service": {
+      "release-type": "python",
+      "package-name": "moderation-service",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["pyproject.toml"]
+    },
+    "apps/gateway": {
+      "release-type": "node",
+      "package-name": "gateway",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md"
+    },
+    "apps/video_feed_provider": {
+      "release-type": "node",
+      "package-name": "video-feed-provider",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md"
+    },
+    "apps/frontend": {
+      "release-type": "node",
+      "package-name": "frontend",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md"
+    },
+    "packages/go-commons": {
+      "release-type": "go",
+      "package-name": "go-commons",
+      "component": "go-commons",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md"
+    },
+    "packages/python-commons": {
+      "release-type": "python",
+      "package-name": "python-commons",
+      "component": "python-commons",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["pyproject.toml"]
+    },
+    "packages/node-commons": {
+      "release-type": "node",
+      "package-name": "node-commons",
+      "component": "node-commons",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md"
+    }
+  },
+  "plugins": [
+    {
+      "type": "node-workspace"
+    }
+  ],
+  "changelog-sections": [
+    {
+      "type": "feat",
+      "section": "Features"
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes"
+    },
+    {
+      "type": "perf",
+      "section": "Performance Improvements"
+    },
+    {
+      "type": "revert",
+      "section": "Reverts"
+    },
+    {
+      "type": "docs",
+      "section": "Documentation",
+      "hidden": false
+    },
+    {
+      "type": "style",
+      "section": "Styles",
+      "hidden": true
+    },
+    {
+      "type": "chore",
+      "section": "Miscellaneous Chores",
+      "hidden": true
+    },
+    {
+      "type": "refactor",
+      "section": "Code Refactoring",
+      "hidden": false
+    },
+    {
+      "type": "test",
+      "section": "Tests",
+      "hidden": true
+    },
+    {
+      "type": "build",
+      "section": "Build System",
+      "hidden": true
+    },
+    {
+      "type": "ci",
+      "section": "Continuous Integration",
+      "hidden": true
+    }
+  ]
+}
