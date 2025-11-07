@@ -1,0 +1,51 @@
+{
+  "name": "gateway",
+  "sourceRoot": "apps/gateway/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/gateway"],
+      "options": {
+        "command": "pnpm build",
+        "cwd": "apps/gateway"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm start:dev",
+        "cwd": "apps/gateway"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm test",
+        "cwd": "apps/gateway"
+      }
+    },
+    "test:cov": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm test:cov",
+        "cwd": "apps/gateway"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm lint",
+        "cwd": "apps/gateway"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm format",
+        "cwd": "apps/gateway"
+      }
+    }
+  },
+  "tags": ["type:app", "lang:node", "scope:gateway", "framework:nestjs"]
+}

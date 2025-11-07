@@ -1,0 +1,37 @@
+{
+  "name": "frontend",
+  "sourceRoot": "apps/frontend",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/apps/frontend/.next"],
+      "options": {
+        "command": "pnpm build",
+        "cwd": "apps/frontend"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm dev",
+        "cwd": "apps/frontend"
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm start",
+        "cwd": "apps/frontend"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm lint",
+        "cwd": "apps/frontend"
+      }
+    }
+  },
+  "tags": ["type:app", "lang:node", "scope:frontend", "framework:nextjs"]
+}
