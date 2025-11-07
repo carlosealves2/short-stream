@@ -10,6 +10,7 @@ on:
       - 'feature/**'
       - 'fix/**'
       - 'hotfix/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
