@@ -1,0 +1,61 @@
+name: 'Setup Monorepo'
+description: 'Setup Node, pnpm, Go and Nx for the monorepo'
+
+inputs:
+  node-version:
+    description: 'Node.js version'
+    required: false
+    default: '20'
+  go-version:
+    description: 'Go version'
+    required: false
+    default: '1.25.3'
+  pnpm-version:
+    description: 'pnpm version'
+    required: false
+    default: '10.20.0'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: ${{ inputs.pnpm-version }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'pnpm'
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+        cache: false
+
+    - name: Get Go cache paths
+      id: go-cache-paths
+      shell: bash
+      run: |
+        echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
+        echo "go-mod=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
+
+    - name: Setup Go cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ steps.go-cache-paths.outputs.go-build }}
+          ${{ steps.go-cache-paths.outputs.go-mod }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Install Node dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Sync Go workspace
+      shell: bash
+      run: go work sync

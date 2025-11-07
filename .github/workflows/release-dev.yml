@@ -1,0 +1,50 @@
+name: Release Management - Monorepo
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      paths_released: ${{ steps.release.outputs.paths_released }}
+    steps:
+      - name: Run Release Please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Show released packages
+        if: steps.release.outputs.releases_created == 'true'
+        run: |
+          echo "📦 Releases created:"
+          echo "${{ steps.release.outputs.paths_released }}"
+
+  tag-releases:
+    name: Tag Individual Releases
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: needs.release-please.outputs.releases_created == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Create service-specific tags
+        run: |
+          echo "Creating service-specific tags..."
+          # This will be handled by release-please automatically
+          echo "✅ Tags created by release-please"
