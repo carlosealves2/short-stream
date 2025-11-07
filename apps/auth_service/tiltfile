@@ -1,0 +1,40 @@
+load('ext://restart_process', 'docker_build_with_restart')
+
+# Compile the Go binary locally
+local_resource(
+    "auth-service-compile",
+    "CGO_ENABLED=0 GOOS=linux go build -o build/authservice ./cmd/main.go",
+    deps=["./cmd", "./internal", "./pkg", "go.mod", "go.sum"],
+    labels=["build"]
+)
+
+# Build Docker image with restart_process
+docker_build_with_restart(
+    "auth-service-image",
+    context=".",
+    dockerfile="Dockerfile",
+    entrypoint=["/authservice"],
+    only=["./build/authservice"],
+    live_update=[
+        sync("./build/authservice", "/authservice"),
+    ]
+)
+
+# Use local secret if exists, otherwise use default
+secret_file = "development/k8s/secret.local.yaml" if os.path.exists("development/k8s/secret.local.yaml") else "development/k8s/secret.yaml"
+configmap_file = "development/k8s/configmap.local.yaml" if os.path.exists("development/k8s/configmap.local.yaml") else "development/k8s/configmap.yaml"
+
+k8s_yaml(
+    [
+        "development/k8s/namespace.yaml",
+        configmap_file,
+        secret_file,
+        "development/k8s/deployment.yaml",
+    ]
+)
+
+k8s_resource(
+    "auth-service",
+    port_forwards=8080,
+    resource_deps=["auth-service-compile"]
+)

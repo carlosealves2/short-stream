@@ -4,7 +4,12 @@ on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop, main]
+    branches:
+      - develop
+      - main
+      - 'feature/**'
+      - 'fix/**'
+      - 'hotfix/**'
 
 permissions:
   contents: read
@@ -176,10 +181,71 @@ jobs:
             fi
           done
 
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs: [setup, test]
+    if: needs.setup.outputs.has-affected == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports
+          path: ./
+
+      - name: Derive appropriate SHAs for base and head
+        uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: develop
+
+      - name: Get affected projects
+        id: affected
+        run: |
+          AFFECTED=$(npx nx show projects --affected --base=${{ steps.set-shas.outputs.base }} --head=${{ steps.set-shas.outputs.head }})
+          echo "affected_projects=$AFFECTED" >> $GITHUB_OUTPUT
+          echo "Affected projects: $AFFECTED"
+
+      - name: Run SonarQube for affected projects
+        run: |
+          for project in ${{ steps.affected.outputs.affected_projects }}; do
+            echo "Processing project: $project"
+
+            # Get project root using Nx
+            project_dir=$(npx nx show project "$project" --json 2>/dev/null | jq -r '.root // empty')
+
+            if [ -z "$project_dir" ]; then
+              echo "Could not find project root for $project, skipping"
+              continue
+            fi
+
+            echo "Project directory: $project_dir"
+
+            if [ -f "$project_dir/sonar-project.properties" ]; then
+              echo "Running SonarQube scan for $project in $project_dir"
+
+              # Run sonar-scanner from project directory
+              docker run --rm \
+                -e SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" \
+                -e SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}" \
+                -v "$(pwd)/$project_dir:/usr/src" \
+                sonarsource/sonar-scanner-cli
+            else
+              echo "No sonar-project.properties found in $project_dir, skipping"
+            fi
+          done
+
   status:
     name: CI Status
     runs-on: ubuntu-latest
-    needs: [setup, lint, test, build, security]
+    needs: [setup, lint, test, build, security, sonarqube]
     if: always()
     steps:
       - name: Check job status
@@ -191,7 +257,8 @@ jobs:
 
           if [ "${{ needs.lint.result }}" != "success" ] || \
              [ "${{ needs.test.result }}" != "success" ] || \
-             [ "${{ needs.build.result }}" != "success" ]; then
+             [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.sonarqube.result }}" != "success" ]; then
             echo "❌ CI failed"
             exit 1
           fi
