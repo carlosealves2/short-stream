@@ -1,0 +1,54 @@
+{
+  "name": "moderation-service",
+  "sourceRoot": "apps/moderation_service",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run uvicorn main:app --reload --host 0.0.0.0 --port 8004",
+        "cwd": "apps/moderation_service"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/moderation_service"],
+      "options": {
+        "command": "uv build --out-dir ../../dist/apps/moderation_service",
+        "cwd": "apps/moderation_service"
+      },
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run pytest -v",
+        "cwd": "apps/moderation_service"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run ruff check .",
+        "cwd": "apps/moderation_service"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run black .",
+        "cwd": "apps/moderation_service"
+      }
+    },
+    "docker:build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t short-stream/moderation-service:latest .",
+        "cwd": "apps/moderation_service"
+      },
+      "dependsOn": ["build"]
+    }
+  },
+  "tags": ["type:app", "lang:python", "scope:moderation"],
+  "implicitDependencies": ["python-commons"]
+}

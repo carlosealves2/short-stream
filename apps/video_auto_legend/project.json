@@ -1,0 +1,54 @@
+{
+  "name": "video-auto-legend",
+  "sourceRoot": "apps/video_auto_legend",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run uvicorn main:app --reload --host 0.0.0.0 --port 8002",
+        "cwd": "apps/video_auto_legend"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/video_auto_legend"],
+      "options": {
+        "command": "uv build --out-dir ../../dist/apps/video_auto_legend",
+        "cwd": "apps/video_auto_legend"
+      },
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run pytest -v",
+        "cwd": "apps/video_auto_legend"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run ruff check .",
+        "cwd": "apps/video_auto_legend"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run black .",
+        "cwd": "apps/video_auto_legend"
+      }
+    },
+    "docker:build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t short-stream/video-auto-legend:latest .",
+        "cwd": "apps/video_auto_legend"
+      },
+      "dependsOn": ["build"]
+    }
+  },
+  "tags": ["type:app", "lang:python", "scope:video"],
+  "implicitDependencies": ["python-commons"]
+}

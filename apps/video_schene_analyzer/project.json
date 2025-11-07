@@ -1,0 +1,54 @@
+{
+  "name": "video-schene-analyzer",
+  "sourceRoot": "apps/video_schene_analyzer",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run uvicorn main:app --reload --host 0.0.0.0 --port 8003",
+        "cwd": "apps/video_schene_analyzer"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/video_schene_analyzer"],
+      "options": {
+        "command": "uv build --out-dir ../../dist/apps/video_schene_analyzer",
+        "cwd": "apps/video_schene_analyzer"
+      },
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run pytest -v",
+        "cwd": "apps/video_schene_analyzer"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run ruff check .",
+        "cwd": "apps/video_schene_analyzer"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run black .",
+        "cwd": "apps/video_schene_analyzer"
+      }
+    },
+    "docker:build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t short-stream/video-schene-analyzer:latest .",
+        "cwd": "apps/video_schene_analyzer"
+      },
+      "dependsOn": ["build"]
+    }
+  },
+  "tags": ["type:app", "lang:python", "scope:video"],
+  "implicitDependencies": ["python-commons"]
+}
