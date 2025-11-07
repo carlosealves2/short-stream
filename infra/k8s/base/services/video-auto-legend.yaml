@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-auto-legend
+  namespace: short-stream
+spec:
+  selector:
+    app: video-auto-legend
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+    name: http
+  type: ClusterIP

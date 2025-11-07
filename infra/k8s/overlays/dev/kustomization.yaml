@@ -1,0 +1,83 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: short-stream
+
+bases:
+  - ../../base
+
+namePrefix: dev-
+
+commonLabels:
+  environment: dev
+
+replicas:
+  # Go Services
+  - name: auth-service
+    count: 1
+  - name: notification-service
+    count: 1
+  - name: video-conversor
+    count: 1
+  - name: video-metadata-service
+    count: 1
+  - name: video-uploader
+    count: 1
+  # Python Services
+  - name: video-auto-legend
+    count: 1
+  - name: video-schene-analyzer
+    count: 1
+  - name: moderation-service
+    count: 1
+  # Node Services
+  - name: gateway
+    count: 1
+  - name: video-feed-provider
+    count: 1
+  - name: frontend
+    count: 1
+
+images:
+  # Go Services
+  - name: short-stream/auth-service
+    newTag: dev-latest
+  - name: short-stream/notification-service
+    newTag: dev-latest
+  - name: short-stream/video-conversor
+    newTag: dev-latest
+  - name: short-stream/video-metadata-service
+    newTag: dev-latest
+  - name: short-stream/video-uploader
+    newTag: dev-latest
+  # Python Services
+  - name: short-stream/video-auto-legend
+    newTag: dev-latest
+  - name: short-stream/video-schene-analyzer
+    newTag: dev-latest
+  - name: short-stream/moderation-service
+    newTag: dev-latest
+  # Node Services
+  - name: short-stream/gateway
+    newTag: dev-latest
+  - name: short-stream/video-feed-provider
+    newTag: dev-latest
+  - name: short-stream/frontend
+    newTag: dev-latest
+
+configMapGenerator:
+  - name: dev-config
+    namespace: short-stream
+    literals:
+      - LOG_LEVEL=debug
+      - ENABLE_DEBUG=true
+
+patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: ENVIRONMENT
+          value: development

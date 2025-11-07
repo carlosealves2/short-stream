@@ -1,0 +1,55 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # Namespaces
+  - namespaces/infrastructure-namespace.yaml
+  - namespaces/apps-namespace.yaml
+
+  # ConfigMaps
+  - configmaps/app-config.yaml
+
+  # Secrets
+  - secrets/postgres-secret.yaml
+  - secrets/rabbitmq-secret.yaml
+  - secrets/minio-secret.yaml
+  - secrets/app-secret.yaml
+
+  # Infrastructure Deployments
+  - deployments/postgres.yaml
+  - deployments/rabbitmq.yaml
+  - deployments/minio.yaml
+  - services/redis.yaml
+
+  # Infrastructure Services
+  - services/postgres.yaml
+  - services/rabbitmq.yaml
+  - services/minio.yaml
+
+  # Go Services
+  - deployments/auth-service.yaml
+  - services/auth-service.yaml
+  - deployments/notification-service.yaml
+  - services/notification-service.yaml
+  - deployments/video-conversor.yaml
+  - services/video-conversor.yaml
+  - deployments/video-metadata-service.yaml
+  - services/video-metadata-service.yaml
+  - deployments/video-uploader.yaml
+  - services/video-uploader.yaml
+
+  # Python Services
+  - deployments/video-auto-legend.yaml
+  - services/video-auto-legend.yaml
+  - deployments/video-schene-analyzer.yaml
+  - services/video-schene-analyzer.yaml
+  - deployments/moderation-service.yaml
+  - services/moderation-service.yaml
+
+  # Node Services
+  - deployments/gateway.yaml
+  - services/gateway.yaml
+  - deployments/video-feed-provider.yaml
+  - services/video-feed-provider.yaml
+  - deployments/frontend.yaml
+  - services/frontend.yaml

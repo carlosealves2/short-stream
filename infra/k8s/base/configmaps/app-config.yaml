@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: short-stream
+data:
+  database-url: "postgres://postgres:postgres@postgres-service.infrastructure.svc.cluster.local:5432/short_stream"
+  redis-url: "redis://redis-service.infrastructure.svc.cluster.local:6379"
+  rabbitmq-url: "amqp://rabbitmq:rabbitmq@rabbitmq-service.infrastructure.svc.cluster.local:5672/"
+  minio-endpoint: "minio-service.infrastructure.svc.cluster.local:9000"
+  smtp-host: "smtp.example.com"
+  smtp-port: "587"
