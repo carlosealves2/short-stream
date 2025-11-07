@@ -216,8 +216,17 @@ jobs:
       - name: Run SonarQube for affected projects
         run: |
           for project in ${{ steps.affected.outputs.affected_projects }}; do
-            # Find project directory
-            project_dir=$(find apps packages -name "$project" -type d -maxdepth 1 2>/dev/null | head -1)
+            echo "Processing project: $project"
+
+            # Get project root using Nx
+            project_dir=$(npx nx show project "$project" --json 2>/dev/null | jq -r '.root // empty')
+
+            if [ -z "$project_dir" ]; then
+              echo "Could not find project root for $project, skipping"
+              continue
+            fi
+
+            echo "Project directory: $project_dir"
 
             if [ -f "$project_dir/sonar-project.properties" ]; then
               echo "Running SonarQube scan for $project in $project_dir"
@@ -229,7 +238,7 @@ jobs:
                 -v "$(pwd)/$project_dir:/usr/src" \
                 sonarsource/sonar-scanner-cli
             else
-              echo "No sonar-project.properties found for $project, skipping"
+              echo "No sonar-project.properties found in $project_dir, skipping"
             fi
           done
 
