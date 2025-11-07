@@ -1,0 +1,48 @@
+{
+  "name": "video-uploader",
+  "sourceRoot": "apps/video_uploader",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/video_uploader"],
+      "options": {
+        "command": "go build -o ../../dist/apps/video_uploader/main ./cmd",
+        "cwd": "apps/video_uploader"
+      },
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go test ./... -v -coverprofile=coverage.out",
+        "cwd": "apps/video_uploader"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "golangci-lint run ./...",
+        "cwd": "apps/video_uploader"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go run ./cmd",
+        "cwd": "apps/video_uploader"
+      },
+      "dependsOn": ["^build"]
+    },
+    "docker:build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t short-stream/video-uploader:latest .",
+        "cwd": "apps/video_uploader"
+      },
+      "dependsOn": ["build"]
+    }
+  },
+  "tags": ["type:app", "lang:go", "scope:video"],
+  "implicitDependencies": ["go-commons"]
+}

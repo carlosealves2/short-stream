@@ -1,0 +1,48 @@
+{
+  "name": "video-conversor",
+  "sourceRoot": "apps/video_conversor",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/video_conversor"],
+      "options": {
+        "command": "go build -o ../../dist/apps/video_conversor/main ./cmd",
+        "cwd": "apps/video_conversor"
+      },
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go test ./... -v -coverprofile=coverage.out",
+        "cwd": "apps/video_conversor"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "golangci-lint run ./...",
+        "cwd": "apps/video_conversor"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go run ./cmd",
+        "cwd": "apps/video_conversor"
+      },
+      "dependsOn": ["^build"]
+    },
+    "docker:build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t short-stream/video-conversor:latest .",
+        "cwd": "apps/video_conversor"
+      },
+      "dependsOn": ["build"]
+    }
+  },
+  "tags": ["type:app", "lang:go", "scope:video"],
+  "implicitDependencies": ["go-commons"]
+}
