@@ -1,6 +1,6 @@
 [project]
 name = "short-stream-commons"
-version = "0.1.0"
+version = "0.1.1"
 description = "Shared Python utilities for Short Stream"
 requires-python = ">=3.14"
 dependencies = [
