@@ -8,6 +8,12 @@ on:
       - 'apps/**'
       - 'packages/**'
       - '.github/workflows/nx-deploy.yml'
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Specific app to deploy (leave empty for affected apps)'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -35,6 +41,14 @@ jobs:
       - name: Get affected applications
         id: affected
         run: |
+          # Manual dispatch with specific app
+          if [ "${{ github.event.inputs.app }}" != "" ]; then
+            echo "has-affected=true" >> $GITHUB_OUTPUT
+            echo "apps=[\"${{ github.event.inputs.app }}\"]" >> $GITHUB_OUTPUT
+            echo "Manual deploy for app: ${{ github.event.inputs.app }}"
+            exit 0
+          fi
+
           # Get affected projects
           AFFECTED=$(npx nx show projects --affected --type=app --base=origin/main~1)
 
