@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  namespace: short-stream
+data:
+  PORT: "8080"
+  OIDC_PROVIDER_URL: "https://your-oidc-provider.com"
+  OIDC_CLIENT_ID: "authservice"
+  OIDC_REDIRECT_URL: "http://localhost:8080/auth/callback"
+  FRONTEND_URL: "http://localhost:3000"
+  COOKIE_DOMAIN: "localhost"
+  COOKIE_SECURE: "false"
+  COOKIE_HTTP_ONLY: "true"
+  COOKIE_SAME_SITE: "Lax"
+  SESSION_MAX_AGE: "3600"
+  REDIS_ADDR: "redis-service.infrastructure.svc.cluster.local:6379"
+  REDIS_DB: "0"

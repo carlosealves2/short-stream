@@ -1,0 +1,19 @@
+{
+  "name": "@short-stream/node-commons",
+  "version": "0.1.0",
+  "description": "Shared TypeScript/Node.js utilities and types for short-stream services",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": [
+    "short-stream",
+    "commons",
+    "shared"
+  ],
+  "author": "",
+  "license": "MIT"
+}
