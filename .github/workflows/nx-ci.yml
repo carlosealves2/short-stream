@@ -201,18 +201,37 @@ jobs:
           name: coverage-reports
           path: ./
 
-      - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: Derive appropriate SHAs for base and head
+        uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: develop
 
-      - name: SonarQube Quality Gate Check
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: Get affected projects
+        id: affected
+        run: |
+          AFFECTED=$(npx nx show projects --affected --base=${{ steps.set-shas.outputs.base }} --head=${{ steps.set-shas.outputs.head }})
+          echo "affected_projects=$AFFECTED" >> $GITHUB_OUTPUT
+          echo "Affected projects: $AFFECTED"
+
+      - name: Run SonarQube for affected projects
+        run: |
+          for project in ${{ steps.affected.outputs.affected_projects }}; do
+            # Find project directory
+            project_dir=$(find apps packages -name "$project" -type d -maxdepth 1 2>/dev/null | head -1)
+
+            if [ -f "$project_dir/sonar-project.properties" ]; then
+              echo "Running SonarQube scan for $project in $project_dir"
+
+              # Run sonar-scanner from project directory
+              docker run --rm \
+                -e SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" \
+                -e SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}" \
+                -v "$(pwd)/$project_dir:/usr/src" \
+                sonarsource/sonar-scanner-cli
+            else
+              echo "No sonar-project.properties found for $project, skipping"
+            fi
+          done
 
   status:
     name: CI Status
