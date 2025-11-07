@@ -1,0 +1,36 @@
+{
+  "name": "go-commons",
+  "sourceRoot": "packages/go-commons",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go build ./...",
+        "cwd": "packages/go-commons"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go test ./... -v -coverprofile=coverage.out",
+        "cwd": "packages/go-commons"
+      }
+    },
+    "test:coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go test ./... -v -coverprofile=coverage.out && go tool cover -html=coverage.out",
+        "cwd": "packages/go-commons"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "golangci-lint run ./...",
+        "cwd": "packages/go-commons"
+      }
+    }
+  },
+  "tags": ["type:lib", "lang:go", "scope:shared"]
+}
