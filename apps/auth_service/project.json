@@ -1,0 +1,55 @@
+{
+  "name": "auth-service",
+  "sourceRoot": "apps/auth_service",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/auth_service"],
+      "options": {
+        "command": "go build -o ../../dist/apps/auth_service/main ./cmd",
+        "cwd": "apps/auth_service"
+      },
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go test ./... -v -coverprofile=coverage.out",
+        "cwd": "apps/auth_service"
+      }
+    },
+    "test:coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go test ./... -v -coverprofile=coverage.out && go tool cover -html=coverage.out",
+        "cwd": "apps/auth_service"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "golangci-lint run ./...",
+        "cwd": "apps/auth_service"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go run ./cmd",
+        "cwd": "apps/auth_service"
+      },
+      "dependsOn": ["^build"]
+    },
+    "docker:build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t short-stream/auth-service:latest .",
+        "cwd": "apps/auth_service"
+      },
+      "dependsOn": ["build"]
+    }
+  },
+  "tags": ["type:app", "lang:go", "scope:auth"],
+  "implicitDependencies": ["go-commons"]
+}
