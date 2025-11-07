@@ -1,0 +1,24 @@
+{
+  "name": "short-stream",
+  "version": "1.0.0",
+  "description": "A simple platform to stream videos",
+  "private": true,
+  "scripts": {
+    "build": "nx run-many --target=build --all",
+    "test": "nx run-many --target=test --all",
+    "lint": "nx run-many --target=lint --all",
+    "serve": "nx run-many --target=serve",
+    "graph": "nx graph",
+    "affected:build": "nx affected --target=build",
+    "affected:test": "nx affected --target=test"
+  },
+  "devDependencies": {
+    "nx": "^22.0.2",
+    "@nx/js": "^22.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@10.20.0"
+}
