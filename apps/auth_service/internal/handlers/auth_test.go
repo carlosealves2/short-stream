@@ -406,11 +406,12 @@ func TestAuthHandler_Callback_TokenExpiry(t *testing.T) {
 	// Verify that cookies have appropriate max age
 	cookies := w.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == "access_token" || cookie.Name == "id_token" {
+		switch cookie.Name {
+		case "access_token", "id_token":
 			// Tokens should expire in about 1 hour (3600 seconds)
 			assert.Greater(t, cookie.MaxAge, 3500)
 			assert.Less(t, cookie.MaxAge, 3700)
-		} else if cookie.Name == "session_id" {
+		case "session_id":
 			assert.Equal(t, 3600, cookie.MaxAge)
 		}
 	}

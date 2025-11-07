@@ -8,6 +8,7 @@ import (
 	"github.com/carlosealves2/short-stream/authservice/pkg/logger"
 )
 
+// Recovery returns a middleware that recovers from panics
 func Recovery(log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {

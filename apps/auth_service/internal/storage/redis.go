@@ -1,7 +1,9 @@
+// Package storage provides storage implementations for the auth service
 package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -73,7 +75,7 @@ func (r *redisStore) GetRefreshToken(ctx context.Context, sessionID string) (str
 	key := sessionPrefix + sessionID
 
 	refreshToken, err := r.client.Get(ctx, key).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return "", fmt.Errorf("session not found or expired")
 	}
 	if err != nil {

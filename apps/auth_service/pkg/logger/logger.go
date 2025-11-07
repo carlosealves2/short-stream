@@ -1,3 +1,4 @@
+// Package logger provides structured logging functionality for the auth service
 package logger
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/phuslu/log"
 )
 
+// Logger is the interface for structured logging operations
 type Logger interface {
 	Info() *log.Entry
 	Error() *log.Entry
@@ -45,6 +47,7 @@ func NewGlobal(level log.Level) Logger {
 	}
 }
 
+// New creates a new logger with the given writer and level
 func New(writer io.Writer, level log.Level) Logger {
 	return &logger{
 		Logger: log.Logger{

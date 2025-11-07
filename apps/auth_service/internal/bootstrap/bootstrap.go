@@ -1,3 +1,4 @@
+// Package bootstrap provides application initialization and setup
 package bootstrap
 
 import (
@@ -16,12 +17,14 @@ import (
 	"github.com/carlosealves2/short-stream/authservice/pkg/logger"
 )
 
+// App represents the authentication service application
 type App struct {
 	router *gin.Engine
 	config *config.Config
 	logger logger.Logger
 }
 
+// New creates a new App instance with the given configuration and logger
 func New(cfg *config.Config, log logger.Logger) (*App, error) {
 	app := &App{
 		config: cfg,
@@ -113,6 +116,7 @@ func (a *App) setupRouter(authHandler *handlers.AuthHandler) *gin.Engine {
 	return router
 }
 
+// Run starts the HTTP server on the configured port
 func (a *App) Run() error {
 	addr := fmt.Sprintf(":%s", a.config.App.Port)
 	a.logger.Info().Str("addr", addr).Msg("Starting auth service")

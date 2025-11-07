@@ -39,7 +39,7 @@ func TestRecovery_HandlesPanic(t *testing.T) {
 
 	router := gin.New()
 	router.Use(Recovery(testLogger))
-	router.GET("/test", func(c *gin.Context) {
+	router.GET("/test", func(c *gin.Context) { //nolint:revive // test handler
 		panic("something went wrong")
 	})
 
@@ -59,7 +59,7 @@ func TestRecovery_LogsPanicDetails(t *testing.T) {
 
 	router := gin.New()
 	router.Use(Recovery(testLogger))
-	router.GET("/test", func(c *gin.Context) {
+	router.GET("/test", func(c *gin.Context) { //nolint:revive // test handler
 		panic("test panic")
 	})
 
@@ -82,7 +82,7 @@ func TestRecovery_WithPanicString(t *testing.T) {
 
 	router := gin.New()
 	router.Use(Recovery(testLogger))
-	router.GET("/test", func(c *gin.Context) {
+	router.GET("/test", func(c *gin.Context) { //nolint:revive // test handler
 		panic("custom error message")
 	})
 
@@ -103,7 +103,7 @@ func TestRecovery_WithPanicError(t *testing.T) {
 
 	router := gin.New()
 	router.Use(Recovery(testLogger))
-	router.GET("/test", func(c *gin.Context) {
+	router.GET("/test", func(c *gin.Context) { //nolint:revive // test handler
 		panic(assert.AnError)
 	})
 
@@ -146,7 +146,7 @@ func TestRecovery_ReturnsJSON(t *testing.T) {
 
 	router := gin.New()
 	router.Use(Recovery(testLogger))
-	router.GET("/test", func(c *gin.Context) {
+	router.GET("/test", func(c *gin.Context) { //nolint:revive // test handler
 		panic("error")
 	})
 

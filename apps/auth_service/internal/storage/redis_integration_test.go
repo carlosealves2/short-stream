@@ -11,6 +11,8 @@ import (
 	testredis "github.com/testcontainers/testcontainers-go/modules/redis"
 )
 
+const testRefreshToken = "test-refresh-token"
+
 func setupRedisContainer(t *testing.T) (*testredis.RedisContainer, redis.UniversalClient) {
 	ctx := context.Background()
 
@@ -98,7 +100,7 @@ func TestRedisStore_CreateSession(t *testing.T) {
 	store := NewRedisStore(client, 3600)
 
 	ctx := context.Background()
-	refreshToken := "test-refresh-token"
+	refreshToken := testRefreshToken
 
 	sessionID, err := store.CreateSession(ctx, refreshToken)
 
@@ -122,7 +124,7 @@ func TestRedisStore_GetRefreshToken_Valid(t *testing.T) {
 	store := NewRedisStore(client, 3600)
 
 	ctx := context.Background()
-	refreshToken := "test-refresh-token"
+	refreshToken := testRefreshToken
 
 	// Create session first
 	sessionID, err := store.CreateSession(ctx, refreshToken)
@@ -187,7 +189,7 @@ func TestRedisStore_DeleteSession(t *testing.T) {
 	store := NewRedisStore(client, 3600)
 
 	ctx := context.Background()
-	refreshToken := "test-refresh-token"
+	refreshToken := testRefreshToken
 
 	// Create session first
 	sessionID, err := store.CreateSession(ctx, refreshToken)
@@ -244,7 +246,7 @@ func TestRedisStore_SessionExpiration(t *testing.T) {
 	store := NewRedisStore(client, 1)
 
 	ctx := context.Background()
-	refreshToken := "test-refresh-token"
+	refreshToken := testRefreshToken
 
 	// Create session
 	sessionID, err := store.CreateSession(ctx, refreshToken)

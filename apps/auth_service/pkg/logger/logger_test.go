@@ -128,8 +128,8 @@ func TestLoggerFatal(t *testing.T) {
 	assert.NotNil(t, logger.Fatal())
 }
 
-func TestLoggerInterface(t *testing.T) {
+func TestLoggerInterface(_ *testing.T) {
 	buf := &bytes.Buffer{}
-	var _ Logger = New(buf, log.InfoLevel)
+	var _ = New(buf, log.InfoLevel)
 	// Se compilar, o teste passa - verifica que implementa a interface
 }

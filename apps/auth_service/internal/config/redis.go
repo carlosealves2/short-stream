@@ -1,5 +1,6 @@
 package config
 
+// RedisConfig holds Redis connection configuration
 type RedisConfig struct {
 	Addr     string
 	Password string

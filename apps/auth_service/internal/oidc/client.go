@@ -1,3 +1,4 @@
+// Package oidc provides OpenID Connect authentication client implementation
 package oidc
 
 import (
@@ -10,12 +11,14 @@ import (
 	"github.com/carlosealves2/short-stream/authservice/internal/config"
 )
 
+// Client is an OIDC authentication client that handles OAuth2 flows
 type Client struct {
 	provider     *oidc.Provider
 	oauth2Config *oauth2.Config
 	verifier     *oidc.IDTokenVerifier
 }
 
+// NewClient creates a new OIDC client with the given configuration
 func NewClient(ctx context.Context, cfg *config.OIDCConfig) (*Client, error) {
 	provider, err := oidc.NewProvider(ctx, cfg.ProviderURL)
 	if err != nil {

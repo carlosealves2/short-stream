@@ -1,9 +1,11 @@
+// Package middleware provides HTTP middleware for the auth service
 package middleware
 
 import (
 	"github.com/gin-gonic/gin"
 )
 
+// CORS returns a middleware that handles Cross-Origin Resource Sharing
 func CORS(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")

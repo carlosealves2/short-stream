@@ -1,5 +1,6 @@
 package config
 
+// OIDCConfig holds OpenID Connect provider configuration
 type OIDCConfig struct {
 	ProviderURL  string
 	ClientID     string

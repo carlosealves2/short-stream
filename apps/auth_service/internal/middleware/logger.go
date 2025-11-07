@@ -8,6 +8,7 @@ import (
 	"github.com/carlosealves2/short-stream/authservice/pkg/logger"
 )
 
+// Logger returns a middleware that logs HTTP requests
 func Logger(log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()

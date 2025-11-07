@@ -1,5 +1,7 @@
+// Package config provides configuration structures and builders for the auth service
 package config
 
+// AppConfig holds application-specific configuration
 type AppConfig struct {
 	Port string
 

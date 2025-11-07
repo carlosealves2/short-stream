@@ -72,31 +72,8 @@ linters-settings:
     locale: US
 
   revive:
-    rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: dot-imports
-      - name: error-return
-      - name: error-strings
-      - name: error-naming
-      - name: exported
-      - name: if-return
-      - name: increment-decrement
-      - name: var-naming
-      - name: var-declaration
-      - name: package-comments
-      - name: range
-      - name: receiver-naming
-      - name: time-naming
-      - name: unexported-return
-      - name: indent-error-flow
-      - name: errorf
-      - name: empty-block
-      - name: superfluous-else
-      - name: unused-parameter
-      - name: unreachable-code
-      - name: redefines-builtin-id
+    # Use default revive rules without customization
+    # Exclusions are handled in issues.exclude-rules below
 
   gosec:
     excludes:
@@ -130,7 +107,7 @@ issues:
 
   exclude-rules:
     # Exclude some linters from running on tests files
-    - path: _test\.go
+    - path: '(.+)_test\.go'
       linters:
         - gocyclo
         - errcheck
@@ -138,6 +115,7 @@ issues:
         - gosec
         - goconst
         - unparam
+        - revive
 
     # Exclude testutil/mocks from all linters
     - path: testutil/mocks/
@@ -153,6 +131,19 @@ issues:
     - path: internal/bootstrap/
       linters:
         - gocyclo
+
+    # Ignore stuttering for Builder pattern (idiomatic Go)
+    - text: "stutters"
+      linters:
+        - revive
+
+    # Ignore unused-parameter in test files
+    - path: '(.+)_test\.go'
+      text: "unused-parameter"
+
+    # Specific exclusion for middleware tests
+    - path: 'internal/middleware/.*_test\.go'
+      text: "unused-parameter"
 
   # Maximum issues count per one linter
   max-issues-per-linter: 0

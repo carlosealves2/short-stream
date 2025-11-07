@@ -16,21 +16,21 @@ func TestNewBuilder(t *testing.T) {
 
 func TestConfigBuilder_WithEnv(t *testing.T) {
 	// Set environment variables
-	os.Setenv("PORT", "9090")
-	os.Setenv("OIDC_PROVIDER_URL", "https://test.com")
-	os.Setenv("OIDC_CLIENT_ID", "test-client")
-	os.Setenv("OIDC_CLIENT_SECRET", "test-secret")
-	os.Setenv("OIDC_REDIRECT_URL", "http://localhost/callback")
-	os.Setenv("FRONTEND_URL", "http://localhost:3000")
-	os.Setenv("REDIS_ADDR", "redis:6379")
+	require.NoError(t, os.Setenv("PORT", "9090"))
+	require.NoError(t, os.Setenv("OIDC_PROVIDER_URL", "https://test.com"))
+	require.NoError(t, os.Setenv("OIDC_CLIENT_ID", "test-client"))
+	require.NoError(t, os.Setenv("OIDC_CLIENT_SECRET", "test-secret"))
+	require.NoError(t, os.Setenv("OIDC_REDIRECT_URL", "http://localhost/callback"))
+	require.NoError(t, os.Setenv("FRONTEND_URL", "http://localhost:3000"))
+	require.NoError(t, os.Setenv("REDIS_ADDR", "redis:6379"))
 	defer func() {
-		os.Unsetenv("PORT")
-		os.Unsetenv("OIDC_PROVIDER_URL")
-		os.Unsetenv("OIDC_CLIENT_ID")
-		os.Setenv("OIDC_CLIENT_SECRET", "")
-		os.Unsetenv("OIDC_REDIRECT_URL")
-		os.Unsetenv("FRONTEND_URL")
-		os.Unsetenv("REDIS_ADDR")
+		_ = os.Unsetenv("PORT")
+		_ = os.Unsetenv("OIDC_PROVIDER_URL")
+		_ = os.Unsetenv("OIDC_CLIENT_ID")
+		_ = os.Setenv("OIDC_CLIENT_SECRET", "")
+		_ = os.Unsetenv("OIDC_REDIRECT_URL")
+		_ = os.Unsetenv("FRONTEND_URL")
+		_ = os.Unsetenv("REDIS_ADDR")
 	}()
 
 	builder := NewBuilder().WithEnv()
@@ -90,17 +90,17 @@ func TestConfigBuilder_Validate_MissingOIDCProvider(t *testing.T) {
 }
 
 func TestConfigBuilder_Build(t *testing.T) {
-	os.Setenv("OIDC_PROVIDER_URL", "https://test.com")
-	os.Setenv("OIDC_CLIENT_ID", "test-client")
-	os.Setenv("OIDC_CLIENT_SECRET", "test-secret")
-	os.Setenv("OIDC_REDIRECT_URL", "http://localhost/callback")
-	os.Setenv("FRONTEND_URL", "http://localhost:3000")
+	require.NoError(t, os.Setenv("OIDC_PROVIDER_URL", "https://test.com"))
+	require.NoError(t, os.Setenv("OIDC_CLIENT_ID", "test-client"))
+	require.NoError(t, os.Setenv("OIDC_CLIENT_SECRET", "test-secret"))
+	require.NoError(t, os.Setenv("OIDC_REDIRECT_URL", "http://localhost/callback"))
+	require.NoError(t, os.Setenv("FRONTEND_URL", "http://localhost:3000"))
 	defer func() {
-		os.Unsetenv("OIDC_PROVIDER_URL")
-		os.Unsetenv("OIDC_CLIENT_ID")
-		os.Unsetenv("OIDC_CLIENT_SECRET")
-		os.Unsetenv("OIDC_REDIRECT_URL")
-		os.Unsetenv("FRONTEND_URL")
+		_ = os.Unsetenv("OIDC_PROVIDER_URL")
+		_ = os.Unsetenv("OIDC_CLIENT_ID")
+		_ = os.Unsetenv("OIDC_CLIENT_SECRET")
+		_ = os.Unsetenv("OIDC_REDIRECT_URL")
+		_ = os.Unsetenv("FRONTEND_URL")
 	}()
 
 	cfg, err := NewBuilder().WithEnv().Build()
@@ -112,8 +112,8 @@ func TestConfigBuilder_Build(t *testing.T) {
 }
 
 func TestGetEnv_String(t *testing.T) {
-	os.Setenv("TEST_STRING", "value")
-	defer os.Unsetenv("TEST_STRING")
+	require.NoError(t, os.Setenv("TEST_STRING", "value"))
+	defer func() { _ = os.Unsetenv("TEST_STRING") }()
 
 	result := getEnv("TEST_STRING", "default")
 	assert.Equal(t, "value", result)
@@ -125,8 +125,8 @@ func TestGetEnv_StringDefault(t *testing.T) {
 }
 
 func TestGetEnv_Int(t *testing.T) {
-	os.Setenv("TEST_INT", "42")
-	defer os.Unsetenv("TEST_INT")
+	require.NoError(t, os.Setenv("TEST_INT", "42"))
+	defer func() { _ = os.Unsetenv("TEST_INT") }()
 
 	result := getEnv("TEST_INT", 0)
 	assert.Equal(t, 42, result)
@@ -138,8 +138,8 @@ func TestGetEnv_IntDefault(t *testing.T) {
 }
 
 func TestGetEnv_Bool(t *testing.T) {
-	os.Setenv("TEST_BOOL", "true")
-	defer os.Unsetenv("TEST_BOOL")
+	require.NoError(t, os.Setenv("TEST_BOOL", "true"))
+	defer func() { _ = os.Unsetenv("TEST_BOOL") }()
 
 	result := getEnv("TEST_BOOL", false)
 	assert.Equal(t, true, result)

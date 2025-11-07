@@ -1,3 +1,4 @@
+// Package handlers provides HTTP request handlers for the auth service
 package handlers
 
 import (
@@ -12,6 +13,7 @@ import (
 	"github.com/carlosealves2/short-stream/authservice/pkg/logger"
 )
 
+// AuthHandler handles authentication-related HTTP requests
 type AuthHandler struct {
 	oidcClient *oidc.Client
 	store      storage.Store
@@ -19,6 +21,7 @@ type AuthHandler struct {
 	logger     logger.Logger
 }
 
+// NewAuthHandler creates a new AuthHandler with the given dependencies
 func NewAuthHandler(oidcClient *oidc.Client, store storage.Store, appConfig *config.AppConfig, log logger.Logger) *AuthHandler {
 	return &AuthHandler{
 		oidcClient: oidcClient,
@@ -81,8 +84,8 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 	idToken, _ := token.Extra("id_token").(string)
 
 	// Set cookies
-	h.setCookie(c, "access_token", accessToken, int(token.Expiry.Sub(time.Now()).Seconds()))
-	h.setCookie(c, "id_token", idToken, int(token.Expiry.Sub(time.Now()).Seconds()))
+	h.setCookie(c, "access_token", accessToken, int(time.Until(token.Expiry).Seconds()))
+	h.setCookie(c, "id_token", idToken, int(time.Until(token.Expiry).Seconds()))
 	h.setCookie(c, "session_id", sessionID, h.appConfig.SessionMaxAge)
 
 	h.logger.Info().Str("session_id", sessionID).Msg("User authenticated successfully")
@@ -130,9 +133,9 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	idToken, _ := newToken.Extra("id_token").(string)
 
 	// Update cookies
-	h.setCookie(c, "access_token", accessToken, int(newToken.Expiry.Sub(time.Now()).Seconds()))
+	h.setCookie(c, "access_token", accessToken, int(time.Until(newToken.Expiry).Seconds()))
 	if idToken != "" {
-		h.setCookie(c, "id_token", idToken, int(newToken.Expiry.Sub(time.Now()).Seconds()))
+		h.setCookie(c, "id_token", idToken, int(time.Until(newToken.Expiry).Seconds()))
 	}
 
 	h.logger.Info().Str("session_id", sessionID).Msg("Token refreshed successfully")

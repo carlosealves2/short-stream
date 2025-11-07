@@ -8,22 +8,28 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Config holds all configuration for the auth service
 type Config struct {
 	App   *AppConfig
 	OIDC  *OIDCConfig
 	Redis *RedisConfig
 }
 
+// ConfigBuilder builds configuration from various sources
+//
+//nolint:revive // ConfigBuilder is idiomatic for builder pattern
 type ConfigBuilder struct {
 	config *Config
 }
 
+// NewBuilder creates a new ConfigBuilder
 func NewBuilder() *ConfigBuilder {
 	return &ConfigBuilder{
 		config: &Config{},
 	}
 }
 
+// WithEnv loads configuration from environment variables
 func (b *ConfigBuilder) WithEnv() *ConfigBuilder {
 	// Try to load .env file (optional in production)
 	_ = godotenv.Load()
@@ -35,6 +41,7 @@ func (b *ConfigBuilder) WithEnv() *ConfigBuilder {
 	return b
 }
 
+// Validate checks if the configuration is valid
 func (b *ConfigBuilder) Validate() error {
 	// Validate App config
 	if b.config.App.FrontendURL == "" {
@@ -63,6 +70,7 @@ func (b *ConfigBuilder) Validate() error {
 	return nil
 }
 
+// Build validates and returns the final configuration
 func (b *ConfigBuilder) Build() (*Config, error) {
 	if err := b.Validate(); err != nil {
 		return nil, err

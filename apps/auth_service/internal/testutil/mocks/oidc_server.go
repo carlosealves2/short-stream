@@ -1,3 +1,4 @@
+// Package mocks provides mock implementations for testing
 package mocks
 
 import (
@@ -63,7 +64,7 @@ func (m *MockOIDCServer) Close() {
 }
 
 // handleDiscovery returns the OIDC discovery document
-func (m *MockOIDCServer) handleDiscovery(w http.ResponseWriter, r *http.Request) {
+func (m *MockOIDCServer) handleDiscovery(w http.ResponseWriter, _ *http.Request) {
 	discovery := map[string]interface{}{
 		"issuer":                 m.Issuer,
 		"authorization_endpoint": m.Issuer + "/authorize",
@@ -79,7 +80,7 @@ func (m *MockOIDCServer) handleDiscovery(w http.ResponseWriter, r *http.Request)
 }
 
 // handleJWKS returns the JSON Web Key Set
-func (m *MockOIDCServer) handleJWKS(w http.ResponseWriter, r *http.Request) {
+func (m *MockOIDCServer) handleJWKS(w http.ResponseWriter, _ *http.Request) {
 	publicKey := &m.PrivateKey.PublicKey
 
 	// Convert public key exponent and modulus to base64url
