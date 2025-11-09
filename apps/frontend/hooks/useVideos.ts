@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { ProcessedVideo } from '@/lib/types';
-import { getVideos } from '@/lib/pexels';
 
 interface UseVideosReturn {
   videos: ProcessedVideo[];
@@ -26,8 +25,16 @@ export function useVideos(page: number = 1, perPage: number = 10): UseVideosRetu
     try {
       setLoading(true);
       setError(null);
-      const fetchedVideos = await getVideos(page, perPage);
-      setVideos(fetchedVideos);
+
+      const response = await fetch(`/api/videos?page=${page}&perPage=${perPage}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch videos');
+      }
+
+      const data = await response.json();
+      setVideos(data.videos);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load videos';
       setError(errorMessage);
