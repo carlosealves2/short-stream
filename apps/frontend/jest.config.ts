@@ -34,7 +34,6 @@ const config: Config = {
     }],
   },
   collectCoverageFrom: [
-    'app/**/*.{js,jsx,ts,tsx}',
     'components/**/*.{js,jsx,ts,tsx}',
     'contexts/**/*.{js,jsx,ts,tsx}',
     'hooks/**/*.{js,jsx,ts,tsx}',
@@ -42,6 +41,11 @@ const config: Config = {
     '!**/*.d.ts',
     '!**/node_modules/**',
     '!**/.next/**',
+    '!**/e2e/**',
+    // Exclude Next.js app directory (routes, layouts) - tested via E2E
+    '!app/**/layout.{js,jsx,ts,tsx}',
+    '!app/**/page.{js,jsx,ts,tsx}',
+    '!app/api/**/*.{js,jsx,ts,tsx}',
   ],
   coverageThreshold: {
     global: {
