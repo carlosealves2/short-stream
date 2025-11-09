@@ -12,10 +12,10 @@ export function VideoActions({ video }: VideoActionsProps) {
   const [saved, setSaved] = useState(false);
 
   // Mock counters - in a real app, these would come from the API
-  const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50000) + 1000);
-  const commentCount = Math.floor(Math.random() * 1000) + 50;
-  const saveCount = Math.floor(Math.random() * 5000) + 100;
-  const shareCount = Math.floor(Math.random() * 2000) + 50;
+  const [likeCount, setLikeCount] = useState(() => Math.floor(Math.random() * 50000) + 1000);
+  const [commentCount] = useState(() => Math.floor(Math.random() * 1000) + 50);
+  const [saveCount] = useState(() => Math.floor(Math.random() * 5000) + 100);
+  const [shareCount] = useState(() => Math.floor(Math.random() * 2000) + 50);
 
   const handleLike = () => {
     if (liked) {

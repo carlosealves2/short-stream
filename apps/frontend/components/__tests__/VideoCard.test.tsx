@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@/__tests__/utils/testUtils';
 import { VideoCard } from '../VideoCard';
 import { mockVideo, mockVerticalVideo } from '@/__tests__/fixtures/mockVideos';
 import { createMockVideoElement } from '@/__tests__/utils/mockVideoElement';
+import * as React from 'react';
 
 // Mock VideoActions component
 jest.mock('../VideoActions', () => ({
@@ -9,13 +10,13 @@ jest.mock('../VideoActions', () => ({
 }));
 
 describe('VideoCard', () => {
-  let mockVideoElement: any;
+  let mockVideoElement: HTMLVideoElement;
 
   beforeEach(() => {
     mockVideoElement = createMockVideoElement();
 
     // Mock useRef to return our mock video element
-    jest.spyOn(require('react'), 'useRef').mockReturnValue({
+    jest.spyOn(React, 'useRef').mockReturnValue({
       current: mockVideoElement,
     });
   });

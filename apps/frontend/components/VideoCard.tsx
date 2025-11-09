@@ -61,15 +61,24 @@ export function VideoCard({ video, isActive }: VideoCardProps) {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+
+    videoElement.addEventListener('play', handlePlay);
+    videoElement.addEventListener('pause', handlePause);
+
     if (isActive) {
       videoElement.play().catch((err) => {
         console.error('Failed to play video:', err);
       });
-      setIsPlaying(true);
     } else {
       videoElement.pause();
-      setIsPlaying(false);
     }
+
+    return () => {
+      videoElement.removeEventListener('play', handlePlay);
+      videoElement.removeEventListener('pause', handlePause);
+    };
   }, [isActive]);
 
   // Toggle play/pause on click

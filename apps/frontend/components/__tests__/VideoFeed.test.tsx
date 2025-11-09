@@ -1,18 +1,21 @@
 import { render, screen, waitFor } from '@/__tests__/utils/testUtils';
 import { VideoFeed } from '../VideoFeed';
 import { mockVideos } from '@/__tests__/fixtures/mockVideos';
+import { ProcessedVideo } from '@/lib/types';
 
 // Mock VideoCard component
 jest.mock('../VideoCard', () => ({
-  VideoCard: ({ video, isActive }: any) => (
+  VideoCard: ({ video, isActive }: { video: ProcessedVideo; isActive: boolean }) => (
     <div data-testid={`video-card-${video.id}`} data-active={isActive}>
       Video: {video.username}
     </div>
   ),
 }));
 
+type MockIntersectionObserver = jest.Mock<IntersectionObserver, [IntersectionObserverCallback]>;
+
 describe('VideoFeed', () => {
-  let mockIntersectionObserver: any;
+  let mockIntersectionObserver: MockIntersectionObserver;
   let observeCallback: IntersectionObserverCallback;
 
   beforeEach(() => {
@@ -24,10 +27,13 @@ describe('VideoFeed', () => {
         disconnect: jest.fn(),
         unobserve: jest.fn(),
         takeRecords: jest.fn(() => []),
+        root: null,
+        rootMargin: '',
+        thresholds: [],
       };
-    });
+    }) as MockIntersectionObserver;
 
-    global.IntersectionObserver = mockIntersectionObserver as any;
+    global.IntersectionObserver = mockIntersectionObserver as unknown as typeof IntersectionObserver;
   });
 
   afterEach(() => {
@@ -123,7 +129,7 @@ describe('VideoFeed', () => {
       mockEntry.target.setAttribute('data-index', '1');
 
       // Call the observer callback
-      observeCallback([mockEntry] as any, {} as any);
+      observeCallback([mockEntry] as unknown as IntersectionObserverEntry[], {} as IntersectionObserver);
 
       rerender(<VideoFeed videos={mockVideos} />);
 
@@ -150,7 +156,7 @@ describe('VideoFeed', () => {
       };
       mockEntry.target.setAttribute('data-index', '1');
 
-      observeCallback([mockEntry] as any, {} as any);
+      observeCallback([mockEntry] as unknown as IntersectionObserverEntry[], {} as IntersectionObserver);
 
       rerender(<VideoFeed videos={mockVideos} />);
 

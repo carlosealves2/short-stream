@@ -1,3 +1,12 @@
+type MockVideoElement = HTMLVideoElement & {
+  _muted: boolean;
+  _volume: number;
+  _currentTime: number;
+  _duration: number;
+  _paused: boolean;
+  _readyState: number;
+};
+
 /**
  * Creates a mock video element with controllable properties and methods
  */
@@ -43,12 +52,12 @@ export function createMockVideoElement(overrides: Partial<HTMLVideoElement> = {}
       return this._readyState;
     },
 
-    play: jest.fn().mockImplementation(function (this: any) {
+    play: jest.fn().mockImplementation(function (this: MockVideoElement) {
       this._paused = false;
       return Promise.resolve();
     }),
 
-    pause: jest.fn().mockImplementation(function (this: any) {
+    pause: jest.fn().mockImplementation(function (this: MockVideoElement) {
       this._paused = true;
     }),
 
@@ -65,7 +74,7 @@ export function createMockVideoElement(overrides: Partial<HTMLVideoElement> = {}
 /**
  * Simulates video loading by updating readyState and duration
  */
-export function simulateVideoLoad(video: any, duration: number = 60) {
+export function simulateVideoLoad(video: MockVideoElement, duration: number = 60) {
   video._duration = duration;
   video._readyState = 4;
 
@@ -77,7 +86,7 @@ export function simulateVideoLoad(video: any, duration: number = 60) {
 /**
  * Simulates video time update
  */
-export function simulateTimeUpdate(video: any, currentTime: number) {
+export function simulateTimeUpdate(video: MockVideoElement, currentTime: number) {
   video._currentTime = currentTime;
 
   const timeUpdateEvent = new Event('timeupdate');

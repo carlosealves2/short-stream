@@ -9,7 +9,7 @@ global.IntersectionObserver = class IntersectionObserver {
     return [];
   }
   unobserve() {}
-} as any;
+} as unknown as typeof IntersectionObserver;
 
 // Mock HTMLMediaElement (video/audio)
 Object.defineProperty(HTMLMediaElement.prototype, 'muted', {
@@ -54,12 +54,12 @@ Object.defineProperty(HTMLMediaElement.prototype, 'paused', {
   },
 });
 
-HTMLMediaElement.prototype.play = jest.fn().mockImplementation(function () {
+HTMLMediaElement.prototype.play = jest.fn().mockImplementation(function (this: HTMLMediaElement & { _paused: boolean }) {
   this._paused = false;
   return Promise.resolve();
 });
 
-HTMLMediaElement.prototype.pause = jest.fn().mockImplementation(function () {
+HTMLMediaElement.prototype.pause = jest.fn().mockImplementation(function (this: HTMLMediaElement & { _paused: boolean }) {
   this._paused = true;
 });
 
