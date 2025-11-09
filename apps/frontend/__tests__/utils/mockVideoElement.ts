@@ -19,36 +19,36 @@ export function createMockVideoElement(overrides: Partial<HTMLVideoElement> = {}
     _paused: true,
     _readyState: 4, // HAVE_ENOUGH_DATA
 
-    get muted() {
+    get muted(): boolean {
       return this._muted;
     },
     set muted(value: boolean) {
       this._muted = value;
     },
 
-    get volume() {
+    get volume(): number {
       return this._volume;
     },
     set volume(value: number) {
       this._volume = value;
     },
 
-    get currentTime() {
+    get currentTime(): number {
       return this._currentTime;
     },
     set currentTime(value: number) {
       this._currentTime = value;
     },
 
-    get duration() {
+    get duration(): number {
       return this._duration;
     },
 
-    get paused() {
+    get paused(): boolean {
       return this._paused;
     },
 
-    get readyState() {
+    get readyState(): number {
       return this._readyState;
     },
 
