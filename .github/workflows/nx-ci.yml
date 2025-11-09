@@ -86,7 +86,7 @@ jobs:
           main-branch-name: develop
 
       - name: Lint affected projects
-        run: npx nx affected --target=lint --parallel=3
+        run: npx nx affected --target=lint --parallel=2
 
   test:
     name: Test
