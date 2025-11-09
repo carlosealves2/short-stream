@@ -1,20 +1,19 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useVideos } from '../useVideos';
-import * as pexelsModule from '@/lib/pexels';
 import { mockVideos } from '@/__tests__/fixtures/mockVideos';
 
-// Mock the pexels module
-jest.mock('@/lib/pexels');
+// Mock fetch globally
+global.fetch = jest.fn();
 
-const mockGetVideos = pexelsModule.getVideos as jest.MockedFunction<typeof pexelsModule.getVideos>;
+const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 
 describe('useVideos', () => {
   beforeEach(() => {
-    mockGetVideos.mockClear();
+    mockFetch.mockClear();
   });
 
   it('should start with loading state', () => {
-    mockGetVideos.mockImplementation(
+    mockFetch.mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
 
@@ -26,7 +25,10 @@ describe('useVideos', () => {
   });
 
   it('should fetch and transform videos successfully', async () => {
-    mockGetVideos.mockResolvedValueOnce(mockVideos);
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ videos: mockVideos }),
+    } as Response);
 
     const { result } = renderHook(() => useVideos(1, 2));
 
@@ -45,7 +47,10 @@ describe('useVideos', () => {
   });
 
   it('should correctly identify vertical videos', async () => {
-    mockGetVideos.mockResolvedValueOnce(mockVideos);
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ videos: mockVideos }),
+    } as Response);
 
     const { result } = renderHook(() => useVideos(1, 2));
 
@@ -59,7 +64,7 @@ describe('useVideos', () => {
   });
 
   it('should handle fetch errors', async () => {
-    mockGetVideos.mockRejectedValueOnce(new Error('Network error'));
+    mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
     const { result } = renderHook(() => useVideos(1, 10));
 
@@ -72,7 +77,10 @@ describe('useVideos', () => {
   });
 
   it('should handle API errors', async () => {
-    mockGetVideos.mockRejectedValueOnce(new Error('Failed to fetch videos: Internal Server Error'));
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: 'Failed to fetch videos' }),
+    } as Response);
 
     const { result } = renderHook(() => useVideos(1, 10));
 
@@ -84,18 +92,24 @@ describe('useVideos', () => {
     expect(result.current.error).toContain('Failed to fetch videos');
   });
 
-  it('should call getVideos with correct parameters', async () => {
-    mockGetVideos.mockResolvedValueOnce(mockVideos);
+  it('should call fetch with correct URL parameters', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ videos: mockVideos }),
+    } as Response);
 
     renderHook(() => useVideos(2, 15));
 
     await waitFor(() => {
-      expect(mockGetVideos).toHaveBeenCalledWith(2, 15);
+      expect(mockFetch).toHaveBeenCalledWith('/api/videos?page=2&perPage=15');
     }, { timeout: 3000 });
   });
 
   it('should refetch when page or perPage changes', async () => {
-    mockGetVideos.mockResolvedValue(mockVideos);
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ videos: mockVideos }),
+    } as Response);
 
     const { rerender } = renderHook(
       ({ page, perPage }) => useVideos(page, perPage),
@@ -105,14 +119,15 @@ describe('useVideos', () => {
     );
 
     await waitFor(() => {
-      expect(mockGetVideos).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     }, { timeout: 3000 });
 
     // Change page
     rerender({ page: 2, perPage: 10 });
 
     await waitFor(() => {
-      expect(mockGetVideos).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenLastCalledWith('/api/videos?page=2&perPage=10');
     }, { timeout: 3000 });
   });
 });
