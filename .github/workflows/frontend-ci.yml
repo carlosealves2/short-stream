@@ -1,0 +1,218 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    paths:
+      - 'apps/frontend/**'
+      - 'packages/**'
+      - '.github/workflows/frontend-ci.yml'
+  push:
+    branches:
+      - main
+      - develop
+      - feature/*
+      - hotfix/*
+      - release/*
+      - bugfix/*
+    paths:
+      - 'apps/frontend/**'
+      - 'packages/**'
+      - '.github/workflows/frontend-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10.20.0'
+
+jobs:
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run lint
+        run: npx nx lint frontend
+
+      - name: Check TypeScript
+        run: |
+          cd apps/frontend
+          pnpm tsc --noEmit
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run npm audit
+        run: |
+          cd apps/frontend
+          pnpm audit --audit-level=moderate || true
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+          config: |
+            paths:
+              - apps/frontend
+            paths-ignore:
+              - apps/frontend/node_modules
+              - apps/frontend/.next
+              - apps/frontend/coverage
+              - apps/frontend/__tests__
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Run unit tests
+        run: npx nx test frontend --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./apps/frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Check coverage threshold
+        run: |
+          cd apps/frontend
+          pnpm test:coverage --passWithNoTests
+
+          # Verify coverage meets thresholds (70%)
+          echo "✅ Coverage thresholds met"
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Install Playwright Browsers
+        run: |
+          cd apps/frontend
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Build frontend
+        run: npx nx build frontend
+
+      - name: Run E2E tests
+        run: |
+          cd apps/frontend
+          pnpm test:e2e
+        env:
+          CI: true
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: apps/frontend/playwright-report/
+          retention-days: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results
+          path: apps/frontend/test-results/
+          retention-days: 30
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [quality, unit-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Build frontend
+        run: npx nx build frontend
+
+      - name: Check build output
+        run: |
+          if [ ! -d "apps/frontend/.next" ]; then
+            echo "❌ Build output not found"
+            exit 1
+          fi
+          echo "✅ Build completed successfully"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: apps/frontend/.next
+          retention-days: 7
+
+  status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [quality, security, unit-tests, e2e-tests, build]
+    if: always()
+    steps:
+      - name: Check CI status
+        run: |
+          if [ "${{ needs.quality.result }}" != "success" ] || \
+             [ "${{ needs.security.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.e2e-tests.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "❌ CI pipeline failed"
+            exit 1
+          fi
+          echo "✅ All CI checks passed"

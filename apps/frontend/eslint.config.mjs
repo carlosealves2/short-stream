@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Ignore E2E test fixtures (Playwright, not React)
+    "e2e/fixtures/**",
   ]),
 ]);
 

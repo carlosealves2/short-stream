@@ -31,6 +31,43 @@
         "command": "pnpm lint",
         "cwd": "apps/frontend"
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/apps/frontend/coverage"],
+      "options": {
+        "command": "pnpm test",
+        "cwd": "apps/frontend"
+      }
+    },
+    "test:watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm test:watch",
+        "cwd": "apps/frontend"
+      }
+    },
+    "test:coverage": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/apps/frontend/coverage"],
+      "options": {
+        "command": "pnpm test:coverage",
+        "cwd": "apps/frontend"
+      }
+    },
+    "test:e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm test:e2e",
+        "cwd": "apps/frontend"
+      }
+    },
+    "test:e2e:ui": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm test:e2e:ui",
+        "cwd": "apps/frontend"
+      }
     }
   },
   "tags": ["type:app", "lang:node", "scope:frontend", "framework:nextjs"]
