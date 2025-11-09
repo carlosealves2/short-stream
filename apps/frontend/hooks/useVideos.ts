@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ProcessedVideo } from '@/lib/types';
 
 interface UseVideosReturn {
@@ -21,7 +21,7 @@ export function useVideos(page: number = 1, perPage: number = 10): UseVideosRetu
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchVideos = async () => {
+  const fetchVideos = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -42,12 +42,11 @@ export function useVideos(page: number = 1, perPage: number = 10): UseVideosRetu
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, perPage]);
 
   useEffect(() => {
     fetchVideos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, perPage]);
+  }, [fetchVideos]);
 
   return {
     videos,

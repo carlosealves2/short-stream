@@ -61,21 +61,26 @@ export function VideoCard({ video, isActive }: VideoCardProps) {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
+    let isCancelled = false;
+
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
 
     videoElement.addEventListener('play', handlePlay);
     videoElement.addEventListener('pause', handlePause);
 
-    if (isActive) {
+    if (isActive && !isCancelled) {
       videoElement.play().catch((err) => {
-        console.error('Failed to play video:', err);
+        if (!isCancelled) {
+          console.error('Failed to play video:', err);
+        }
       });
     } else {
       videoElement.pause();
     }
 
     return () => {
+      isCancelled = true;
       videoElement.removeEventListener('play', handlePlay);
       videoElement.removeEventListener('pause', handlePause);
     };

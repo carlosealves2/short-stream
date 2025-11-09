@@ -1,6 +1,6 @@
 import { PexelsResponse, Video, ProcessedVideo } from './types';
 
-const PEXELS_API_KEY = process.env.NEXT_PUBLIC_PEXELS_API_KEY;
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
 const PEXELS_API_URL = 'https://api.pexels.com/videos';
 
 /**
