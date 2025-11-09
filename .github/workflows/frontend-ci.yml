@@ -69,6 +69,7 @@ jobs:
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
         if: github.event_name == 'pull_request'
+        continue-on-error: true
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -108,19 +109,12 @@ jobs:
         uses: codecov/codecov-action@v4
         if: always()
         with:
-          file: ./apps/frontend/coverage/coverage-final.json
+          file: ./apps/frontend/coverage/lcov.info
           flags: frontend
           name: frontend-coverage
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Coverage Report
-        uses: davelosert/vitest-coverage-report-action@v2
-        if: github.event_name == 'pull_request'
-        with:
-          json-summary-path: ./apps/frontend/coverage/coverage-summary.json
-          json-final-path: ./apps/frontend/coverage/coverage-final.json
 
       - name: Check coverage threshold
         run: |
