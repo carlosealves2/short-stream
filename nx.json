@@ -1,6 +1,13 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "defaultBase": "develop",
+  "implicitDependencies": {
+    ".github/workflows/*": [],
+    ".claude/**/*": [],
+    "*.md": [],
+    ".gitignore": [],
+    "docker-compose*.yml": []
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
     "production": [
