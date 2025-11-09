@@ -110,7 +110,8 @@ func (a *App) setupRouter(authHandler *handlers.AuthHandler) *gin.Engine {
 		authGroup.GET("/login", authHandler.Login)
 		authGroup.GET("/callback", authHandler.Callback)
 		authGroup.POST("/refresh", authHandler.Refresh)
-		authGroup.POST("/logout", authHandler.Logout)
+		authGroup.GET("/logout", authHandler.Logout)   // GET para permitir redirect direto
+		authGroup.POST("/logout", authHandler.Logout)  // POST para compatibilidade
 	}
 
 	return router
