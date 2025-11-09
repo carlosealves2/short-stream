@@ -6,7 +6,7 @@ export interface User {
   email?: string;
   name?: string;
   preferred_username?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface JWTPayload extends User {
@@ -151,7 +151,7 @@ export class AuthAPI {
       });
 
       return response.ok;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
