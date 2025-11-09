@@ -9,7 +9,7 @@
   "apps/moderation_service": "0.1.1",
   "apps/gateway": "0.1.1",
   "apps/video_feed_provider": "0.1.1",
-  "apps/frontend": "0.1.1",
+  "apps/frontend": "0.1.2",
   "packages/go-commons": "0.1.1",
   "packages/python-commons": "0.1.1",
   "packages/node-commons": "0.1.0"
