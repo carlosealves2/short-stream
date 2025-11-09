@@ -16,7 +16,7 @@ export class JwtAuthGuard implements CanActivate {
 
   constructor(private reflector: Reflector) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     // Verificar se a rota é pública
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -50,38 +50,56 @@ export class JwtAuthGuard implements CanActivate {
         throw new UnauthorizedException('Invalid token format');
       }
 
-      const payload = decoded.payload as any;
+      interface JwtPayload {
+        exp?: number;
+        sub?: string;
+        email?: string;
+        name?: string;
+        preferred_username?: string;
+        [key: string]: unknown;
+      }
+
+      const payload = decoded.payload as JwtPayload;
 
       // Verificar expiração
-      if (payload.exp && payload.exp < Date.now() / 1000) {
+      if (payload.exp !== undefined && payload.exp < Date.now() / 1000) {
         throw new UnauthorizedException('Token expired');
       }
 
       // Adicionar dados do usuário no request
-      request['user'] = {
+      const user = {
         sub: payload.sub,
         email: payload.email,
         name: payload.name,
         preferred_username: payload.preferred_username,
         ...payload,
       };
+      (request as Request & { user: typeof user }).user = user;
 
       return true;
-    } catch (error) {
-      this.logger.error(`Token validation error: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      this.logger.error(
+        `Token validation error: ${err.message ?? 'Unknown error'}`,
+      );
       throw new UnauthorizedException('Invalid authentication token');
     }
   }
 
-  private extractTokenFromCookie(request: Request, cookieName: string): string | undefined {
+  private extractTokenFromCookie(
+    request: Request,
+    cookieName: string,
+  ): string | undefined {
     const cookies = request.headers.cookie;
 
     if (!cookies) {
       return undefined;
     }
 
-    const cookieArray = cookies.split(';').map(c => c.trim());
-    const targetCookie = cookieArray.find(c => c.startsWith(`${cookieName}=`));
+    const cookieArray = cookies.split(';').map((c) => c.trim());
+    const targetCookie = cookieArray.find((c) =>
+      c.startsWith(`${cookieName}=`),
+    );
 
     if (!targetCookie) {
       return undefined;

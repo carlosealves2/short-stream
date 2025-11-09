@@ -22,7 +22,7 @@ export class AuthProxyController {
    * Esta rota NÃO é pública, requer autenticação
    */
   @Get('me')
-  async getCurrentUser(@CurrentUser() user: any) {
+  getCurrentUser(@CurrentUser() user: unknown): unknown {
     return user;
   }
 
@@ -63,15 +63,15 @@ export class AuthProxyController {
 
       // Copiar headers da resposta, incluindo Set-Cookie
       Object.keys(response.headers).forEach((key) => {
-        const value = response.headers[key];
+        const value = response.headers[key] as string | string[] | undefined;
         if (value !== undefined) {
-          res.setHeader(key, value);
+          res.setHeader(key, String(value));
         }
       });
 
       // Para redirects, usar o método redirect do Express
       if (response.status >= 300 && response.status < 400) {
-        const location = response.headers['location'];
+        const location = response.headers['location'] as string | undefined;
         if (location) {
           this.logger.debug(`Redirecting to: ${location}`);
           return res.redirect(response.status, location);
@@ -80,11 +80,19 @@ export class AuthProxyController {
 
       // Retornar o body da resposta
       return res.send(response.data);
-    } catch (error) {
-      this.logger.error(`Error in proxy: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as {
+        message?: string;
+        stack?: string;
+        status?: number;
+      };
+      this.logger.error(
+        `Error in proxy: ${err.message ?? 'Unknown error'}`,
+        err.stack,
+      );
       throw new HttpException(
-        error.message || 'Internal server error',
-        error.status || 500,
+        err.message ?? 'Internal server error',
+        err.status ?? 500,
       );
     }
   }

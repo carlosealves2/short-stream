@@ -23,7 +23,7 @@ export class AuthProxyService {
     path: string,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     headers: Record<string, string>,
-    body?: any,
+    body?: unknown,
     queryParams?: Record<string, string>,
   ) {
     const url = `${this.authServiceUrl}${path}`;
@@ -48,8 +48,11 @@ export class AuthProxyService {
     try {
       const response = await firstValueFrom(this.httpService.request(config));
       return response;
-    } catch (error) {
-      this.logger.error(`Error proxying request: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      this.logger.error(
+        `Error proxying request: ${err.message ?? 'Unknown error'}`,
+      );
       throw error;
     }
   }
