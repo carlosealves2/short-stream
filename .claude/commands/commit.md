@@ -55,3 +55,4 @@ Created 3 commits:
 ```
 
 IMPORTANT: Never use git push unless explicitly requested by the user. Only create local commits.
+IMPORTANT: Never mention the Claude code in the commit message.
