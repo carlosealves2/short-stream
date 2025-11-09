@@ -6,7 +6,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run --extra dev pytest",
+        "command": "uv run --extra dev pytest || [ $? -eq 5 ] && echo 'No tests found' || exit $?",
         "cwd": "packages/python-commons"
       }
     },

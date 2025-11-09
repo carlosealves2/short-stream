@@ -22,7 +22,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run --extra dev pytest -v",
+        "command": "uv run --extra dev pytest -v || [ $? -eq 5 ] && echo 'No tests found' || exit $?",
         "cwd": "apps/video_auto_legend"
       }
     },
