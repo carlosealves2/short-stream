@@ -11,6 +11,11 @@ on:
       - 'fix/**'
       - 'hotfix/**'
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow on'
+        required: false
+        default: 'develop'
 
 permissions:
   contents: read
