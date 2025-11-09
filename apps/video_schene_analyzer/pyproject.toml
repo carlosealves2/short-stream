@@ -7,10 +7,6 @@ dependencies = [
     "short-stream-commons",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
-    "opencv-python>=4.8.0",
-    "torch>=2.0.0",
-    "torchvision>=0.15.0",
-    "pillow>=10.0.0",
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
 ]
@@ -28,3 +24,8 @@ short-stream-commons = { workspace = true }
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.4",
+]

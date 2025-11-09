@@ -22,14 +22,14 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run pytest -v",
+        "command": "uv run --extra dev pytest -v",
         "cwd": "apps/video_schene_analyzer"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run ruff check .",
+        "command": "uv run --extra dev ruff check .",
         "cwd": "apps/video_schene_analyzer"
       }
     },
