@@ -48,18 +48,18 @@ export default function ProfilePage() {
                 <dt className="text-sm text-gray-400 uppercase">Email Verificado</dt>
                 <dd className="mt-1 text-white">{user?.email_verified ? 'Sim' : 'Não'}</dd>
               </div>
-              {user?.given_name && (
+              {user?.given_name ? (
                 <div className="bg-gray-700 p-3 rounded">
                   <dt className="text-sm text-gray-400 uppercase">Primeiro Nome</dt>
-                  <dd className="mt-1 text-white">{user.given_name}</dd>
+                  <dd className="mt-1 text-white">{String(user.given_name)}</dd>
                 </div>
-              )}
-              {user?.family_name && (
+              ) : null}
+              {user?.family_name ? (
                 <div className="bg-gray-700 p-3 rounded">
                   <dt className="text-sm text-gray-400 uppercase">Sobrenome</dt>
-                  <dd className="mt-1 text-white">{user.family_name}</dd>
+                  <dd className="mt-1 text-white">{String(user.family_name)}</dd>
                 </div>
-              )}
+              ) : null}
             </dl>
           </div>
         </div>
