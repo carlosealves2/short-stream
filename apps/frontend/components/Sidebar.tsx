@@ -1,17 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 export function Sidebar() {
-  const [activeTab, setActiveTab] = useState('para-voce');
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+  };
 
   return (
     <>
       {/* Para Você */}
       <button
-        onClick={() => setActiveTab('para-voce')}
+        onClick={() => handleNavigation('/')}
         className={`fixed left-2 top-4 flex flex-col items-center justify-center w-16 h-16 rounded-lg transition-colors z-40 ${
-          activeTab === 'para-voce'
+          pathname === '/'
             ? 'bg-gray-800 text-white'
             : 'text-gray-400 hover:text-white hover:bg-gray-900'
         }`}
@@ -29,9 +34,9 @@ export function Sidebar() {
 
       {/* Carregar */}
       <button
-        onClick={() => setActiveTab('carregar')}
+        onClick={() => handleNavigation('/upload')}
         className={`fixed left-2 top-24 flex flex-col items-center justify-center w-16 h-16 rounded-lg transition-colors z-40 ${
-          activeTab === 'carregar'
+          pathname === '/upload'
             ? 'bg-gray-800 text-white'
             : 'text-gray-400 hover:text-white hover:bg-gray-900'
         }`}
@@ -55,9 +60,9 @@ export function Sidebar() {
 
       {/* Perfil */}
       <button
-        onClick={() => setActiveTab('perfil')}
+        onClick={() => handleNavigation('/profile')}
         className={`fixed left-2 top-44 flex flex-col items-center justify-center w-16 h-16 rounded-lg transition-colors z-40 ${
-          activeTab === 'perfil'
+          pathname === '/profile'
             ? 'bg-gray-800 text-white'
             : 'text-gray-400 hover:text-white hover:bg-gray-900'
         }`}
