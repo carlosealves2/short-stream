@@ -1,4 +1,4 @@
-import { AuthAPI, User, JWTPayload } from '../auth';
+import { AuthAPI, User } from '../auth';
 import { config } from '../../config';
 
 // Mock fetch globally

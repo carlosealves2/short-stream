@@ -1,4 +1,3 @@
-import React from 'react';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../AuthContext';
 import { AuthAPI, User } from '../../lib/api/auth';
