@@ -443,3 +443,89 @@ func TestAuthHandler_Refresh_WithTokenRotation(t *testing.T) {
 	mockStore.AssertCalled(t, "UpdateSession", mock.Anything, "session-123", mock.AnythingOfType("string"))
 	mockStore.AssertExpectations(t)
 }
+
+func TestAuthHandler_Logout_WithIDToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	handler, mockStore, mockServer := setupTestHandler(t)
+	defer mockServer.Close()
+
+	mockStore.On("DeleteSession", mock.Anything, "session-123").Return(nil)
+
+	router := gin.New()
+	router.POST("/auth/logout", handler.Logout)
+
+	req := httptest.NewRequest("POST", "/auth/logout", nil)
+	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-123"})
+	req.AddCookie(&http.Cookie{Name: "id_token", Value: "test-id-token"})
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusFound, w.Code)
+	location := w.Header().Get("Location")
+	assert.NotEmpty(t, location)
+	// Should redirect to OIDC logout endpoint
+	assert.Contains(t, location, mockServer.Issuer+"/logout")
+	assert.Contains(t, location, "id_token_hint=test-id-token")
+
+	mockStore.AssertExpectations(t)
+}
+
+func TestAuthHandler_Logout_DeleteSessionError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	handler, mockStore, mockServer := setupTestHandler(t)
+	defer mockServer.Close()
+
+	mockStore.On("DeleteSession", mock.Anything, "session-123").Return(errors.New("delete error"))
+
+	router := gin.New()
+	router.POST("/auth/logout", handler.Logout)
+
+	req := httptest.NewRequest("POST", "/auth/logout", nil)
+	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-123"})
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	// Should still redirect even if session deletion fails
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.NotEmpty(t, w.Header().Get("Location"))
+
+	// Verify cookies are still cleared
+	cookies := w.Result().Cookies()
+	for _, cookie := range cookies {
+		if cookie.Name == "access_token" || cookie.Name == "id_token" || cookie.Name == "session_id" {
+			assert.Equal(t, -1, cookie.MaxAge, "Cookie %s should be cleared", cookie.Name)
+		}
+	}
+
+	mockStore.AssertExpectations(t)
+}
+
+func TestAuthHandler_Logout_NoIDTokenNoSession(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	handler, mockStore, mockServer := setupTestHandler(t)
+	defer mockServer.Close()
+
+	router := gin.New()
+	router.POST("/auth/logout", handler.Logout)
+
+	req := httptest.NewRequest("POST", "/auth/logout", nil)
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	// Should redirect to frontend (fallback)
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.Equal(t, "http://localhost:3000", w.Header().Get("Location"))
+
+	// Verify cookies are cleared
+	cookies := w.Result().Cookies()
+	for _, cookie := range cookies {
+		if cookie.Name == "access_token" || cookie.Name == "id_token" || cookie.Name == "session_id" {
+			assert.Equal(t, -1, cookie.MaxAge, "Cookie %s should be cleared", cookie.Name)
+		}
+	}
+
+	mockStore.AssertNotCalled(t, "DeleteSession")
+}
