@@ -245,68 +245,68 @@ jobs:
               PROJECT_KEY=$(grep "sonar.projectKey" "$project_dir/sonar-project.properties" | cut -d'=' -f2)
 
               # Run sonar-scanner from project directory
-              docker run --rm \
+              echo "Running SonarQube scanner..."
+              if ! docker run --rm \
                 -e SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" \
                 -e SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}" \
                 -v "$(pwd)/$project_dir:/usr/src" \
-                sonarsource/sonar-scanner-cli
+                sonarsource/sonar-scanner-cli; then
+                echo "❌ SonarQube scanner failed for $project"
+                FAILED_PROJECTS="$FAILED_PROJECTS $project"
+                continue
+              fi
 
-              # Wait for SonarQube to process and poll task status
-              echo "Waiting for SonarQube to process analysis for $PROJECT_KEY..."
+              echo "✅ Scanner completed successfully"
 
-              # Poll for analysis completion (max 60 seconds)
+              # Wait for SonarQube to process the analysis and check Quality Gate
+              echo "Waiting for SonarQube to process analysis..."
+              echo "Checking Quality Gate status for $PROJECT_KEY..."
+
               MAX_ATTEMPTS=12
               ATTEMPT=0
-              TASK_STATUS=""
+              QG_FOUND=false
 
               while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
                 sleep 5
                 ATTEMPT=$((ATTEMPT + 1))
 
-                # Get the latest analysis task
-                TASK_RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-                  "${{ secrets.SONAR_HOST_URL }}/api/ce/component?component=$PROJECT_KEY")
+                echo "Attempt $ATTEMPT/$MAX_ATTEMPTS"
 
-                echo "Attempt $ATTEMPT/$MAX_ATTEMPTS - Task response:"
-                echo "$TASK_RESPONSE" | jq '.' || echo "$TASK_RESPONSE"
+                QG_RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+                  "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=$PROJECT_KEY")
 
-                TASK_STATUS=$(echo "$TASK_RESPONSE" | jq -r '.current.status // empty' 2>/dev/null)
+                # Check if response is valid JSON
+                if echo "$QG_RESPONSE" | jq empty 2>/dev/null; then
+                  QG_STATUS=$(echo "$QG_RESPONSE" | jq -r '.projectStatus.status // empty' 2>/dev/null)
 
-                if [ "$TASK_STATUS" = "SUCCESS" ]; then
-                  echo "✅ Analysis completed successfully"
-                  break
-                elif [ "$TASK_STATUS" = "FAILED" ] || [ "$TASK_STATUS" = "CANCELED" ]; then
-                  echo "❌ Analysis task failed with status: $TASK_STATUS"
-                  FAILED_PROJECTS="$FAILED_PROJECTS $project"
-                  continue 2
+                  if [ -n "$QG_STATUS" ]; then
+                    QG_FOUND=true
+                    echo "Quality Gate status: $QG_STATUS"
+                    echo "$QG_RESPONSE" | jq '.projectStatus.conditions'
+
+                    if [ "$QG_STATUS" = "OK" ]; then
+                      echo "✅ Quality Gate passed for $project"
+                      break
+                    elif [ "$QG_STATUS" = "ERROR" ]; then
+                      echo "❌ Quality Gate failed for $project"
+                      echo "Failed conditions:"
+                      echo "$QG_RESPONSE" | jq '.projectStatus.conditions[] | select(.status == "ERROR")'
+                      FAILED_PROJECTS="$FAILED_PROJECTS $project"
+                      break
+                    else
+                      echo "⚠️ Unexpected Quality Gate status: $QG_STATUS"
+                    fi
+                  else
+                    echo "Quality Gate data not ready yet, waiting..."
+                  fi
                 else
-                  echo "Analysis still processing (status: $TASK_STATUS)..."
+                  echo "⚠️ Invalid API response, retrying..."
                 fi
               done
 
-              if [ $ATTEMPT -eq $MAX_ATTEMPTS ] && [ "$TASK_STATUS" != "SUCCESS" ]; then
-                echo "⚠️ Analysis didn't complete in time, checking Quality Gate anyway..."
-              fi
-
-              # Check Quality Gate status
-              echo "Checking Quality Gate status for $PROJECT_KEY..."
-              QG_RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-                "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=$PROJECT_KEY")
-
-              echo "Quality Gate response:"
-              echo "$QG_RESPONSE" | jq '.' || echo "$QG_RESPONSE"
-
-              QG_STATUS=$(echo "$QG_RESPONSE" | jq -r '.projectStatus.status // empty' 2>/dev/null)
-
-              if [ -z "$QG_STATUS" ]; then
-                echo "❌ Failed to get Quality Gate status for $project"
-                echo "Raw response: $QG_RESPONSE"
+              if [ "$QG_FOUND" = false ]; then
+                echo "❌ Quality Gate check timed out for $project after 60 seconds"
                 FAILED_PROJECTS="$FAILED_PROJECTS $project"
-              elif [ "$QG_STATUS" != "OK" ]; then
-                echo "❌ Quality Gate failed for $project (status: $QG_STATUS)"
-                FAILED_PROJECTS="$FAILED_PROJECTS $project"
-              else
-                echo "✅ Quality Gate passed for $project"
               fi
             else
               echo "No sonar-project.properties found in $project_dir, skipping"
