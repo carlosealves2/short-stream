@@ -223,6 +223,8 @@ jobs:
 
       - name: Run SonarQube for affected projects
         run: |
+          FAILED_PROJECTS=""
+
           for project in ${{ steps.affected.outputs.affected_projects }}; do
             echo "Processing project: $project"
 
@@ -239,16 +241,46 @@ jobs:
             if [ -f "$project_dir/sonar-project.properties" ]; then
               echo "Running SonarQube scan for $project in $project_dir"
 
+              # Get project key from sonar-project.properties
+              PROJECT_KEY=$(grep "sonar.projectKey" "$project_dir/sonar-project.properties" | cut -d'=' -f2)
+
               # Run sonar-scanner from project directory
               docker run --rm \
                 -e SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" \
                 -e SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}" \
                 -v "$(pwd)/$project_dir:/usr/src" \
                 sonarsource/sonar-scanner-cli
+
+              # Wait a bit for SonarQube to process
+              echo "Waiting for SonarQube to process analysis..."
+              sleep 10
+
+              # Check Quality Gate status
+              echo "Checking Quality Gate status for $PROJECT_KEY..."
+              QG_STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+                "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=$PROJECT_KEY" \
+                | jq -r '.projectStatus.status')
+
+              echo "Quality Gate status for $project: $QG_STATUS"
+
+              if [ "$QG_STATUS" != "OK" ]; then
+                echo "❌ Quality Gate failed for $project"
+                FAILED_PROJECTS="$FAILED_PROJECTS $project"
+              else
+                echo "✅ Quality Gate passed for $project"
+              fi
             else
               echo "No sonar-project.properties found in $project_dir, skipping"
             fi
           done
+
+          # Fail if any project failed Quality Gate
+          if [ -n "$FAILED_PROJECTS" ]; then
+            echo "❌ The following projects failed Quality Gate:$FAILED_PROJECTS"
+            exit 1
+          fi
+
+          echo "✅ All projects passed Quality Gate"
 
   status:
     name: CI Status
