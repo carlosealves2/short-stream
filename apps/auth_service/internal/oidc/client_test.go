@@ -400,7 +400,7 @@ func TestClient_GetEndSessionURL_NoEndpoint(t *testing.T) {
 }
 
 // Helper function to create a mock OIDC server without end_session_endpoint
-func createMockServerWithoutEndSession(t *testing.T) *httptest.Server {
+func createMockServerWithoutEndSession(_ *testing.T) *httptest.Server {
 	mux := http.NewServeMux()
 
 	// Discovery endpoint WITHOUT end_session_endpoint
@@ -417,11 +417,11 @@ func createMockServerWithoutEndSession(t *testing.T) *httptest.Server {
 			"id_token_signing_alg_values_supported": []string{"RS256"},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(discovery)
+		_ = json.NewEncoder(w).Encode(discovery)
 	})
 
 	// JWKS endpoint
-	mux.HandleFunc("/jwks", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/jwks", func(w http.ResponseWriter, _ *http.Request) {
 		jwks := map[string]interface{}{
 			"keys": []map[string]interface{}{
 				{
@@ -435,14 +435,14 @@ func createMockServerWithoutEndSession(t *testing.T) *httptest.Server {
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(jwks)
+		_ = json.NewEncoder(w).Encode(jwks)
 	})
 
 	return httptest.NewServer(mux)
 }
 
 // Helper function to create a mock OIDC server without ID token
-func createMockServerWithoutIDToken(t *testing.T) *httptest.Server {
+func createMockServerWithoutIDToken(_ *testing.T) *httptest.Server {
 	mux := http.NewServeMux()
 
 	// Discovery endpoint
@@ -458,11 +458,11 @@ func createMockServerWithoutIDToken(t *testing.T) *httptest.Server {
 			"id_token_signing_alg_values_supported": []string{"RS256"},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(discovery)
+		_ = json.NewEncoder(w).Encode(discovery)
 	})
 
 	// JWKS endpoint
-	mux.HandleFunc("/jwks", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/jwks", func(w http.ResponseWriter, _ *http.Request) {
 		jwks := map[string]interface{}{
 			"keys": []map[string]interface{}{
 				{
@@ -476,11 +476,11 @@ func createMockServerWithoutIDToken(t *testing.T) *httptest.Server {
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(jwks)
+		_ = json.NewEncoder(w).Encode(jwks)
 	})
 
 	// Token endpoint that returns token WITHOUT id_token
-	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
 		response := map[string]interface{}{
 			"access_token":  "test-access-token",
 			"token_type":    "Bearer",
@@ -489,7 +489,7 @@ func createMockServerWithoutIDToken(t *testing.T) *httptest.Server {
 			// NO id_token field
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(w).Encode(response)
 	})
 
 	return httptest.NewServer(mux)
