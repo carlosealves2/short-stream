@@ -251,20 +251,59 @@ jobs:
                 -v "$(pwd)/$project_dir:/usr/src" \
                 sonarsource/sonar-scanner-cli
 
-              # Wait a bit for SonarQube to process
-              echo "Waiting for SonarQube to process analysis..."
-              sleep 10
+              # Wait for SonarQube to process and poll task status
+              echo "Waiting for SonarQube to process analysis for $PROJECT_KEY..."
+
+              # Poll for analysis completion (max 60 seconds)
+              MAX_ATTEMPTS=12
+              ATTEMPT=0
+              TASK_STATUS=""
+
+              while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+                sleep 5
+                ATTEMPT=$((ATTEMPT + 1))
+
+                # Get the latest analysis task
+                TASK_RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+                  "${{ secrets.SONAR_HOST_URL }}/api/ce/component?component=$PROJECT_KEY")
+
+                echo "Attempt $ATTEMPT/$MAX_ATTEMPTS - Task response:"
+                echo "$TASK_RESPONSE" | jq '.' || echo "$TASK_RESPONSE"
+
+                TASK_STATUS=$(echo "$TASK_RESPONSE" | jq -r '.current.status // empty' 2>/dev/null)
+
+                if [ "$TASK_STATUS" = "SUCCESS" ]; then
+                  echo "✅ Analysis completed successfully"
+                  break
+                elif [ "$TASK_STATUS" = "FAILED" ] || [ "$TASK_STATUS" = "CANCELED" ]; then
+                  echo "❌ Analysis task failed with status: $TASK_STATUS"
+                  FAILED_PROJECTS="$FAILED_PROJECTS $project"
+                  continue 2
+                else
+                  echo "Analysis still processing (status: $TASK_STATUS)..."
+                fi
+              done
+
+              if [ $ATTEMPT -eq $MAX_ATTEMPTS ] && [ "$TASK_STATUS" != "SUCCESS" ]; then
+                echo "⚠️ Analysis didn't complete in time, checking Quality Gate anyway..."
+              fi
 
               # Check Quality Gate status
               echo "Checking Quality Gate status for $PROJECT_KEY..."
-              QG_STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-                "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=$PROJECT_KEY" \
-                | jq -r '.projectStatus.status')
+              QG_RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+                "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=$PROJECT_KEY")
 
-              echo "Quality Gate status for $project: $QG_STATUS"
+              echo "Quality Gate response:"
+              echo "$QG_RESPONSE" | jq '.' || echo "$QG_RESPONSE"
 
-              if [ "$QG_STATUS" != "OK" ]; then
-                echo "❌ Quality Gate failed for $project"
+              QG_STATUS=$(echo "$QG_RESPONSE" | jq -r '.projectStatus.status // empty' 2>/dev/null)
+
+              if [ -z "$QG_STATUS" ]; then
+                echo "❌ Failed to get Quality Gate status for $project"
+                echo "Raw response: $QG_RESPONSE"
+                FAILED_PROJECTS="$FAILED_PROJECTS $project"
+              elif [ "$QG_STATUS" != "OK" ]; then
+                echo "❌ Quality Gate failed for $project (status: $QG_STATUS)"
                 FAILED_PROJECTS="$FAILED_PROJECTS $project"
               else
                 echo "✅ Quality Gate passed for $project"
