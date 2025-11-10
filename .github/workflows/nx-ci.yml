@@ -258,6 +258,25 @@ jobs:
 
               echo "✅ Scanner completed successfully"
 
+              # Test API connectivity and authentication before polling
+              echo "Testing API connectivity..."
+              TEST_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+                -u "${{ secrets.SONAR_TOKEN }}:" \
+                "${{ secrets.SONAR_HOST_URL }}/api/system/status")
+
+              TEST_HTTP_CODE=$(echo "$TEST_RESPONSE" | tail -1 | grep "HTTP_CODE:" | cut -d':' -f2)
+              TEST_BODY=$(echo "$TEST_RESPONSE" | sed '$d')
+
+              echo "Test API HTTP Code: $TEST_HTTP_CODE"
+              echo "Test API Response: $TEST_BODY"
+
+              if [ "$TEST_HTTP_CODE" != "200" ]; then
+                echo "❌ Cannot connect to SonarQube API (HTTP $TEST_HTTP_CODE)"
+                echo "This might be an authentication or network issue"
+                FAILED_PROJECTS="$FAILED_PROJECTS $project"
+                continue
+              fi
+
               # Wait for SonarQube to process the analysis and check Quality Gate
               echo "Waiting for SonarQube to process analysis..."
               echo "Checking Quality Gate status for $PROJECT_KEY..."
