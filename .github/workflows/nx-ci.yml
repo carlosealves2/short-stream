@@ -260,21 +260,24 @@ jobs:
 
               # Test API connectivity and authentication before polling
               echo "Testing API connectivity..."
-              TEST_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
-                -u "${{ secrets.SONAR_TOKEN }}:" \
-                "${{ secrets.SONAR_HOST_URL }}/api/system/status")
+              echo "Token length: ${#SONAR_TOKEN}"
+              echo "Token starts with: ${SONAR_TOKEN:0:10}..."
 
-              TEST_HTTP_CODE=$(echo "$TEST_RESPONSE" | tail -1 | grep "HTTP_CODE:" | cut -d':' -f2)
-              TEST_BODY=$(echo "$TEST_RESPONSE" | sed '$d')
+              # Try with verbose output to see what's happening
+              TEST_RESPONSE=$(curl -v -u "${{ secrets.SONAR_TOKEN }}:" \
+                "${{ secrets.SONAR_HOST_URL }}/api/system/status" 2>&1)
 
-              echo "Test API HTTP Code: $TEST_HTTP_CODE"
-              echo "Test API Response: $TEST_BODY"
+              echo "Full curl output:"
+              echo "$TEST_RESPONSE"
+              echo ""
 
-              if [ "$TEST_HTTP_CODE" != "200" ]; then
-                echo "❌ Cannot connect to SonarQube API (HTTP $TEST_HTTP_CODE)"
-                echo "This might be an authentication or network issue"
-                FAILED_PROJECTS="$FAILED_PROJECTS $project"
-                continue
+              # Check if we got JSON
+              if echo "$TEST_RESPONSE" | grep -q '"status"'; then
+                echo "✅ Got valid JSON response from system status API"
+              else
+                echo "❌ Did not get valid JSON - might be HTML or error"
+                echo "This suggests authentication is failing"
+                # Don't fail yet, try Quality Gate anyway
               fi
 
               # Wait for SonarQube to process the analysis and check Quality Gate
