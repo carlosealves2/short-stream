@@ -275,6 +275,13 @@ jobs:
                 QG_RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
                   "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=$PROJECT_KEY")
 
+                # Debug first attempt to see what we're getting
+                if [ $ATTEMPT -eq 1 ]; then
+                  echo "First response (first 500 chars):"
+                  echo "$QG_RESPONSE" | head -c 500
+                  echo ""
+                fi
+
                 # Check if response is valid JSON
                 if echo "$QG_RESPONSE" | jq empty 2>/dev/null; then
                   QG_STATUS=$(echo "$QG_RESPONSE" | jq -r '.projectStatus.status // empty' 2>/dev/null)
@@ -300,7 +307,11 @@ jobs:
                     echo "Quality Gate data not ready yet, waiting..."
                   fi
                 else
-                  echo "⚠️ Invalid API response, retrying..."
+                  echo "⚠️ Invalid API response (not valid JSON)"
+                  if [ $ATTEMPT -eq 1 ] || [ $ATTEMPT -eq 12 ]; then
+                    echo "Full response:"
+                    echo "$QG_RESPONSE"
+                  fi
                 fi
               done
 
