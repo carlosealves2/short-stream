@@ -258,30 +258,7 @@ jobs:
 
               echo "✅ Scanner completed successfully"
 
-              # Test API connectivity and authentication before polling
-              echo "Testing API connectivity..."
-              echo "Token length: ${#SONAR_TOKEN}"
-              echo "Token starts with: ${SONAR_TOKEN:0:10}..."
-
-              # Try with verbose output to see what's happening
-              TEST_RESPONSE=$(curl -v -u "${{ secrets.SONAR_TOKEN }}:" \
-                "${{ secrets.SONAR_HOST_URL }}/api/system/status" 2>&1)
-
-              echo "Full curl output:"
-              echo "$TEST_RESPONSE"
-              echo ""
-
-              # Check if we got JSON
-              if echo "$TEST_RESPONSE" | grep -q '"status"'; then
-                echo "✅ Got valid JSON response from system status API"
-              else
-                echo "❌ Did not get valid JSON - might be HTML or error"
-                echo "This suggests authentication is failing"
-                # Don't fail yet, try Quality Gate anyway
-              fi
-
               # Wait for SonarQube to process the analysis and check Quality Gate
-              echo "Waiting for SonarQube to process analysis..."
               echo "Checking Quality Gate status for $PROJECT_KEY..."
 
               MAX_ATTEMPTS=12
@@ -292,17 +269,8 @@ jobs:
                 sleep 5
                 ATTEMPT=$((ATTEMPT + 1))
 
-                echo "Attempt $ATTEMPT/$MAX_ATTEMPTS"
-
                 QG_RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
                   "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=$PROJECT_KEY")
-
-                # Debug first attempt to see what we're getting
-                if [ $ATTEMPT -eq 1 ]; then
-                  echo "First response (first 500 chars):"
-                  echo "$QG_RESPONSE" | head -c 500
-                  echo ""
-                fi
 
                 # Check if response is valid JSON
                 if echo "$QG_RESPONSE" | jq empty 2>/dev/null; then
@@ -310,8 +278,6 @@ jobs:
 
                   if [ -n "$QG_STATUS" ]; then
                     QG_FOUND=true
-                    echo "Quality Gate status: $QG_STATUS"
-                    echo "$QG_RESPONSE" | jq '.projectStatus.conditions'
 
                     if [ "$QG_STATUS" = "OK" ]; then
                       echo "✅ Quality Gate passed for $project"
@@ -325,14 +291,6 @@ jobs:
                     else
                       echo "⚠️ Unexpected Quality Gate status: $QG_STATUS"
                     fi
-                  else
-                    echo "Quality Gate data not ready yet, waiting..."
-                  fi
-                else
-                  echo "⚠️ Invalid API response (not valid JSON)"
-                  if [ $ATTEMPT -eq 1 ] || [ $ATTEMPT -eq 12 ]; then
-                    echo "Full response:"
-                    echo "$QG_RESPONSE"
                   fi
                 fi
               done
