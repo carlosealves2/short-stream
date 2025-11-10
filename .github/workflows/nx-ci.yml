@@ -217,7 +217,7 @@ jobs:
       - name: Get affected projects
         id: affected
         run: |
-          AFFECTED=$(npx nx show projects --affected --base=${{ steps.set-shas.outputs.base }} --head=${{ steps.set-shas.outputs.head }})
+          AFFECTED=$(npx nx show projects --affected --base=${{ steps.set-shas.outputs.base }} --head=${{ steps.set-shas.outputs.head }} | tr '\n' ' ')
           echo "affected_projects=$AFFECTED" >> $GITHUB_OUTPUT
           echo "Affected projects: $AFFECTED"
 
