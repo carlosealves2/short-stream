@@ -20,6 +20,12 @@ import (
 	"github.com/carlosealves2/short-stream/authservice/pkg/logger"
 )
 
+const (
+	cookieAccessToken = "access_token"
+	cookieIDToken     = "id_token"
+	cookieSessionID   = "session_id"
+)
+
 func setupTestHandler(t *testing.T) (*AuthHandler, *mocks.MockStore, *mocks.MockOIDCServer) {
 	mockStore := &mocks.MockStore{}
 	mockOIDCServer, err := mocks.NewMockOIDCServer()
@@ -134,9 +140,9 @@ func TestAuthHandler_Callback_Success(t *testing.T) {
 	for _, cookie := range cookies {
 		cookieNames[cookie.Name] = true
 	}
-	assert.True(t, cookieNames["access_token"], "access_token cookie should be set")
-	assert.True(t, cookieNames["id_token"], "id_token cookie should be set")
-	assert.True(t, cookieNames["session_id"], "session_id cookie should be set")
+	assert.True(t, cookieNames[cookieAccessToken], "access_token cookie should be set")
+	assert.True(t, cookieNames[cookieIDToken], "id_token cookie should be set")
+	assert.True(t, cookieNames[cookieSessionID], "session_id cookie should be set")
 
 	mockStore.AssertExpectations(t)
 }
@@ -234,7 +240,7 @@ func TestAuthHandler_Refresh_Success(t *testing.T) {
 	router.POST("/auth/refresh", handler.Refresh)
 
 	req := httptest.NewRequest("POST", "/auth/refresh", nil)
-	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-123"})
+	req.AddCookie(&http.Cookie{Name: cookieSessionID, Value: "session-123"})
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -275,7 +281,7 @@ func TestAuthHandler_Refresh_InvalidSession(t *testing.T) {
 	router.POST("/auth/refresh", handler.Refresh)
 
 	req := httptest.NewRequest("POST", "/auth/refresh", nil)
-	req.AddCookie(&http.Cookie{Name: "session_id", Value: "invalid-session"})
+	req.AddCookie(&http.Cookie{Name: cookieSessionID, Value: "invalid-session"})
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -308,7 +314,7 @@ func TestAuthHandler_Logout_Success(t *testing.T) {
 	// Check that cookies are cleared
 	cookies := w.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == "access_token" || cookie.Name == "id_token" || cookie.Name == "session_id" {
+		if cookie.Name == cookieAccessToken || cookie.Name == cookieIDToken || cookie.Name == cookieSessionID {
 			assert.Equal(t, -1, cookie.MaxAge, "Cookie %s should be cleared", cookie.Name)
 		}
 	}
@@ -407,11 +413,11 @@ func TestAuthHandler_Callback_TokenExpiry(t *testing.T) {
 	cookies := w.Result().Cookies()
 	for _, cookie := range cookies {
 		switch cookie.Name {
-		case "access_token", "id_token":
+		case cookieAccessToken, cookieIDToken:
 			// Tokens should expire in about 1 hour (3600 seconds)
 			assert.Greater(t, cookie.MaxAge, 3500)
 			assert.Less(t, cookie.MaxAge, 3700)
-		case "session_id":
+		case cookieSessionID:
 			assert.Equal(t, 3600, cookie.MaxAge)
 		}
 	}
@@ -432,7 +438,7 @@ func TestAuthHandler_Refresh_WithTokenRotation(t *testing.T) {
 	router.POST("/auth/refresh", handler.Refresh)
 
 	req := httptest.NewRequest("POST", "/auth/refresh", nil)
-	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-123"})
+	req.AddCookie(&http.Cookie{Name: cookieSessionID, Value: "session-123"})
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -455,8 +461,8 @@ func TestAuthHandler_Logout_WithIDToken(t *testing.T) {
 	router.POST("/auth/logout", handler.Logout)
 
 	req := httptest.NewRequest("POST", "/auth/logout", nil)
-	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-123"})
-	req.AddCookie(&http.Cookie{Name: "id_token", Value: "test-id-token"})
+	req.AddCookie(&http.Cookie{Name: cookieSessionID, Value: "session-123"})
+	req.AddCookie(&http.Cookie{Name: cookieIDToken, Value: "test-id-token"})
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -494,7 +500,7 @@ func TestAuthHandler_Logout_DeleteSessionError(t *testing.T) {
 	// Verify cookies are still cleared
 	cookies := w.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == "access_token" || cookie.Name == "id_token" || cookie.Name == "session_id" {
+		if cookie.Name == cookieAccessToken || cookie.Name == cookieIDToken || cookie.Name == cookieSessionID {
 			assert.Equal(t, -1, cookie.MaxAge, "Cookie %s should be cleared", cookie.Name)
 		}
 	}
@@ -522,7 +528,7 @@ func TestAuthHandler_Logout_NoIDTokenNoSession(t *testing.T) {
 	// Verify cookies are cleared
 	cookies := w.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == "access_token" || cookie.Name == "id_token" || cookie.Name == "session_id" {
+		if cookie.Name == cookieAccessToken || cookie.Name == cookieIDToken || cookie.Name == cookieSessionID {
 			assert.Equal(t, -1, cookie.MaxAge, "Cookie %s should be cleared", cookie.Name)
 		}
 	}
