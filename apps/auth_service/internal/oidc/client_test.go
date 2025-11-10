@@ -214,3 +214,98 @@ func TestMockOIDCServer_Discovery(t *testing.T) {
 
 	assert.NoError(t, err)
 }
+
+func TestClient_GetEndSessionURL(t *testing.T) {
+	mockServer, err := mocks.NewMockOIDCServer()
+	require.NoError(t, err)
+	defer mockServer.Close()
+
+	cfg := &config.OIDCConfig{
+		ProviderURL:  mockServer.Issuer,
+		ClientID:     mockServer.ClientID,
+		ClientSecret: "test-secret",
+		RedirectURL:  mockServer.RedirectURL,
+		Scopes:       []string{"openid"},
+	}
+
+	ctx := context.Background()
+	client, err := NewClient(ctx, cfg)
+	require.NoError(t, err)
+
+	// Exchange code to get tokens with ID token
+	token, err := client.ExchangeCode(ctx, "mock-auth-code")
+	require.NoError(t, err)
+
+	rawIDToken, ok := token.Extra("id_token").(string)
+	require.True(t, ok)
+	require.NotEmpty(t, rawIDToken)
+
+	postLogoutRedirectURI := "http://localhost:3000/logout"
+
+	// Test GetEndSessionURL
+	logoutURL := client.GetEndSessionURL(rawIDToken, postLogoutRedirectURI)
+
+	assert.NotEmpty(t, logoutURL)
+	assert.Contains(t, logoutURL, mockServer.Issuer+"/logout")
+	assert.Contains(t, logoutURL, "id_token_hint="+rawIDToken)
+	assert.Contains(t, logoutURL, "post_logout_redirect_uri="+postLogoutRedirectURI)
+}
+
+func TestClient_GetEndSessionURL_WithEmptyIDToken(t *testing.T) {
+	mockServer, err := mocks.NewMockOIDCServer()
+	require.NoError(t, err)
+	defer mockServer.Close()
+
+	cfg := &config.OIDCConfig{
+		ProviderURL:  mockServer.Issuer,
+		ClientID:     mockServer.ClientID,
+		ClientSecret: "test-secret",
+		RedirectURL:  mockServer.RedirectURL,
+		Scopes:       []string{"openid"},
+	}
+
+	ctx := context.Background()
+	client, err := NewClient(ctx, cfg)
+	require.NoError(t, err)
+
+	postLogoutRedirectURI := "http://localhost:3000/logout"
+
+	// Test GetEndSessionURL with empty ID token
+	logoutURL := client.GetEndSessionURL("", postLogoutRedirectURI)
+
+	assert.NotEmpty(t, logoutURL)
+	assert.Contains(t, logoutURL, mockServer.Issuer+"/logout")
+	assert.Contains(t, logoutURL, "post_logout_redirect_uri="+postLogoutRedirectURI)
+}
+
+func TestClient_GetEndSessionURL_WithEmptyPostLogoutRedirectURI(t *testing.T) {
+	mockServer, err := mocks.NewMockOIDCServer()
+	require.NoError(t, err)
+	defer mockServer.Close()
+
+	cfg := &config.OIDCConfig{
+		ProviderURL:  mockServer.Issuer,
+		ClientID:     mockServer.ClientID,
+		ClientSecret: "test-secret",
+		RedirectURL:  mockServer.RedirectURL,
+		Scopes:       []string{"openid"},
+	}
+
+	ctx := context.Background()
+	client, err := NewClient(ctx, cfg)
+	require.NoError(t, err)
+
+	// Exchange code to get tokens with ID token
+	token, err := client.ExchangeCode(ctx, "mock-auth-code")
+	require.NoError(t, err)
+
+	rawIDToken, ok := token.Extra("id_token").(string)
+	require.True(t, ok)
+
+	// Test GetEndSessionURL with empty post logout redirect URI
+	logoutURL := client.GetEndSessionURL(rawIDToken, "")
+
+	assert.NotEmpty(t, logoutURL)
+	assert.Contains(t, logoutURL, mockServer.Issuer+"/logout")
+	assert.Contains(t, logoutURL, "id_token_hint="+rawIDToken)
+}
