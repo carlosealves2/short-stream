@@ -302,8 +302,8 @@ func TestAuthHandler_Logout_Success(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "logged out")
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.NotEmpty(t, w.Header().Get("Location"))
 
 	// Check that cookies are cleared
 	cookies := w.Result().Cookies()
@@ -329,8 +329,8 @@ func TestAuthHandler_Logout_WithoutSession(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "logged out")
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.NotEmpty(t, w.Header().Get("Location"))
 
 	mockStore.AssertNotCalled(t, "DeleteSession")
 }
