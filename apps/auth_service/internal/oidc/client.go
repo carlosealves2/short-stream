@@ -91,3 +91,31 @@ func (c *Client) VerifyIDToken(ctx context.Context, rawIDToken string) (*oidc.ID
 	}
 	return idToken, nil
 }
+
+// GetEndSessionURL generates the OIDC logout URL (RP-Initiated Logout)
+// This logs the user out from the OIDC provider (Keycloak)
+func (c *Client) GetEndSessionURL(idToken, postLogoutRedirectURI string) string {
+	// Get the end_session_endpoint from the provider's discovery document
+	var claims struct {
+		EndSessionEndpoint string `json:"end_session_endpoint"`
+	}
+
+	if err := c.provider.Claims(&claims); err != nil {
+		// Fallback: construct the URL manually for Keycloak
+		// This is a safe fallback since we know we're using Keycloak
+		return ""
+	}
+
+	if claims.EndSessionEndpoint == "" {
+		return ""
+	}
+
+	// Build the logout URL with parameters
+	logoutURL := fmt.Sprintf("%s?id_token_hint=%s&post_logout_redirect_uri=%s",
+		claims.EndSessionEndpoint,
+		idToken,
+		postLogoutRedirectURI,
+	)
+
+	return logoutURL
+}

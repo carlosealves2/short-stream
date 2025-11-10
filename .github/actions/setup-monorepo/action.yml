@@ -35,6 +35,17 @@ runs:
         go-version: ${{ inputs.go-version }}
         cache: false
 
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      shell: bash
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
     - name: Get Go cache paths
       id: go-cache-paths
       shell: bash

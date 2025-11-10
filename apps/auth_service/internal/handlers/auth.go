@@ -142,11 +142,18 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "token refreshed"})
 }
 
-// Logout logs out the user
+// Logout logs out the user from the application and OIDC provider
 func (h *AuthHandler) Logout(c *gin.Context) {
+	// Get ID token for OIDC logout
+	idToken, err := c.Cookie("id_token")
+	if err != nil {
+		h.logger.Warn().Msg("No ID token found in logout request")
+		// Still proceed with local logout even if no ID token
+	}
+
+	// Delete session from storage
 	sessionID, err := c.Cookie("session_id")
 	if err == nil {
-		// Delete session from storage
 		if err := h.store.DeleteSession(c.Request.Context(), sessionID); err != nil {
 			h.logger.Error().Err(err).Str("session_id", sessionID).Msg("Failed to delete session")
 		} else {
@@ -159,7 +166,20 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	h.clearCookie(c, "id_token")
 	h.clearCookie(c, "session_id")
 
-	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
+	// If we have an ID token, redirect to OIDC provider logout
+	// This performs RP-Initiated Logout (logs out from Keycloak)
+	if idToken != "" {
+		logoutURL := h.oidcClient.GetEndSessionURL(idToken, h.appConfig.FrontendURL)
+		if logoutURL != "" {
+			h.logger.Info().Str("logout_url", logoutURL).Msg("Redirecting to OIDC provider logout")
+			c.Redirect(http.StatusFound, logoutURL)
+			return
+		}
+	}
+
+	// Fallback: if no ID token or OIDC logout URL, just redirect to frontend
+	h.logger.Info().Msg("Performing local logout only, redirecting to frontend")
+	c.Redirect(http.StatusFound, h.appConfig.FrontendURL)
 }
 
 // Helper methods

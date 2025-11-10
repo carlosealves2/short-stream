@@ -20,6 +20,12 @@ import (
 	"github.com/carlosealves2/short-stream/authservice/pkg/logger"
 )
 
+const (
+	cookieAccessToken = "access_token"
+	cookieIDToken     = "id_token"
+	cookieSessionID   = "session_id"
+)
+
 func setupTestHandler(t *testing.T) (*AuthHandler, *mocks.MockStore, *mocks.MockOIDCServer) {
 	mockStore := &mocks.MockStore{}
 	mockOIDCServer, err := mocks.NewMockOIDCServer()
@@ -134,9 +140,9 @@ func TestAuthHandler_Callback_Success(t *testing.T) {
 	for _, cookie := range cookies {
 		cookieNames[cookie.Name] = true
 	}
-	assert.True(t, cookieNames["access_token"], "access_token cookie should be set")
-	assert.True(t, cookieNames["id_token"], "id_token cookie should be set")
-	assert.True(t, cookieNames["session_id"], "session_id cookie should be set")
+	assert.True(t, cookieNames[cookieAccessToken], "access_token cookie should be set")
+	assert.True(t, cookieNames[cookieIDToken], "id_token cookie should be set")
+	assert.True(t, cookieNames[cookieSessionID], "session_id cookie should be set")
 
 	mockStore.AssertExpectations(t)
 }
@@ -234,7 +240,7 @@ func TestAuthHandler_Refresh_Success(t *testing.T) {
 	router.POST("/auth/refresh", handler.Refresh)
 
 	req := httptest.NewRequest("POST", "/auth/refresh", nil)
-	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-123"})
+	req.AddCookie(&http.Cookie{Name: cookieSessionID, Value: "session-123"})
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -275,7 +281,7 @@ func TestAuthHandler_Refresh_InvalidSession(t *testing.T) {
 	router.POST("/auth/refresh", handler.Refresh)
 
 	req := httptest.NewRequest("POST", "/auth/refresh", nil)
-	req.AddCookie(&http.Cookie{Name: "session_id", Value: "invalid-session"})
+	req.AddCookie(&http.Cookie{Name: cookieSessionID, Value: "invalid-session"})
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -302,13 +308,13 @@ func TestAuthHandler_Logout_Success(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "logged out")
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.NotEmpty(t, w.Header().Get("Location"))
 
 	// Check that cookies are cleared
 	cookies := w.Result().Cookies()
 	for _, cookie := range cookies {
-		if cookie.Name == "access_token" || cookie.Name == "id_token" || cookie.Name == "session_id" {
+		if cookie.Name == cookieAccessToken || cookie.Name == cookieIDToken || cookie.Name == cookieSessionID {
 			assert.Equal(t, -1, cookie.MaxAge, "Cookie %s should be cleared", cookie.Name)
 		}
 	}
@@ -329,8 +335,8 @@ func TestAuthHandler_Logout_WithoutSession(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "logged out")
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.NotEmpty(t, w.Header().Get("Location"))
 
 	mockStore.AssertNotCalled(t, "DeleteSession")
 }
@@ -407,11 +413,11 @@ func TestAuthHandler_Callback_TokenExpiry(t *testing.T) {
 	cookies := w.Result().Cookies()
 	for _, cookie := range cookies {
 		switch cookie.Name {
-		case "access_token", "id_token":
+		case cookieAccessToken, cookieIDToken:
 			// Tokens should expire in about 1 hour (3600 seconds)
 			assert.Greater(t, cookie.MaxAge, 3500)
 			assert.Less(t, cookie.MaxAge, 3700)
-		case "session_id":
+		case cookieSessionID:
 			assert.Equal(t, 3600, cookie.MaxAge)
 		}
 	}
@@ -432,7 +438,7 @@ func TestAuthHandler_Refresh_WithTokenRotation(t *testing.T) {
 	router.POST("/auth/refresh", handler.Refresh)
 
 	req := httptest.NewRequest("POST", "/auth/refresh", nil)
-	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-123"})
+	req.AddCookie(&http.Cookie{Name: cookieSessionID, Value: "session-123"})
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -442,4 +448,90 @@ func TestAuthHandler_Refresh_WithTokenRotation(t *testing.T) {
 	// Verify UpdateSession was called (token rotation)
 	mockStore.AssertCalled(t, "UpdateSession", mock.Anything, "session-123", mock.AnythingOfType("string"))
 	mockStore.AssertExpectations(t)
+}
+
+func TestAuthHandler_Logout_WithIDToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	handler, mockStore, mockServer := setupTestHandler(t)
+	defer mockServer.Close()
+
+	mockStore.On("DeleteSession", mock.Anything, "session-123").Return(nil)
+
+	router := gin.New()
+	router.POST("/auth/logout", handler.Logout)
+
+	req := httptest.NewRequest("POST", "/auth/logout", nil)
+	req.AddCookie(&http.Cookie{Name: cookieSessionID, Value: "session-123"})
+	req.AddCookie(&http.Cookie{Name: cookieIDToken, Value: "test-id-token"})
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusFound, w.Code)
+	location := w.Header().Get("Location")
+	assert.NotEmpty(t, location)
+	// Should redirect to OIDC logout endpoint
+	assert.Contains(t, location, mockServer.Issuer+"/logout")
+	assert.Contains(t, location, "id_token_hint=test-id-token")
+
+	mockStore.AssertExpectations(t)
+}
+
+func TestAuthHandler_Logout_DeleteSessionError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	handler, mockStore, mockServer := setupTestHandler(t)
+	defer mockServer.Close()
+
+	mockStore.On("DeleteSession", mock.Anything, "session-123").Return(errors.New("delete error"))
+
+	router := gin.New()
+	router.POST("/auth/logout", handler.Logout)
+
+	req := httptest.NewRequest("POST", "/auth/logout", nil)
+	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-123"})
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	// Should still redirect even if session deletion fails
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.NotEmpty(t, w.Header().Get("Location"))
+
+	// Verify cookies are still cleared
+	cookies := w.Result().Cookies()
+	for _, cookie := range cookies {
+		if cookie.Name == cookieAccessToken || cookie.Name == cookieIDToken || cookie.Name == cookieSessionID {
+			assert.Equal(t, -1, cookie.MaxAge, "Cookie %s should be cleared", cookie.Name)
+		}
+	}
+
+	mockStore.AssertExpectations(t)
+}
+
+func TestAuthHandler_Logout_NoIDTokenNoSession(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	handler, mockStore, mockServer := setupTestHandler(t)
+	defer mockServer.Close()
+
+	router := gin.New()
+	router.POST("/auth/logout", handler.Logout)
+
+	req := httptest.NewRequest("POST", "/auth/logout", nil)
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	// Should redirect to frontend (fallback)
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.Equal(t, "http://localhost:3000", w.Header().Get("Location"))
+
+	// Verify cookies are cleared
+	cookies := w.Result().Cookies()
+	for _, cookie := range cookies {
+		if cookie.Name == cookieAccessToken || cookie.Name == cookieIDToken || cookie.Name == cookieSessionID {
+			assert.Equal(t, -1, cookie.MaxAge, "Cookie %s should be cleared", cookie.Name)
+		}
+	}
+
+	mockStore.AssertNotCalled(t, "DeleteSession")
 }

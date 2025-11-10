@@ -35,7 +35,7 @@ jobs:
     name: Setup
     runs-on: ubuntu-latest
     # Skip CI for release-please commits (only version bumps, no code changes)
-    if: ${{ !contains(github.event.head_commit.message, 'chore(main): release') && !startsWith(github.head_ref, 'release-please--') }}
+    if: "${{ !contains(github.event.head_commit.message, 'chore(main): release') && !startsWith(github.head_ref, 'release-please--') }}"
     outputs:
       has-affected: ${{ steps.affected.outputs.has-affected }}
     steps:
@@ -86,7 +86,7 @@ jobs:
           main-branch-name: develop
 
       - name: Lint affected projects
-        run: npx nx affected --target=lint --parallel=3
+        run: npx nx affected --target=lint --parallel=2
 
   test:
     name: Test
@@ -217,12 +217,14 @@ jobs:
       - name: Get affected projects
         id: affected
         run: |
-          AFFECTED=$(npx nx show projects --affected --base=${{ steps.set-shas.outputs.base }} --head=${{ steps.set-shas.outputs.head }})
+          AFFECTED=$(npx nx show projects --affected --base=${{ steps.set-shas.outputs.base }} --head=${{ steps.set-shas.outputs.head }} | tr '\n' ' ')
           echo "affected_projects=$AFFECTED" >> $GITHUB_OUTPUT
           echo "Affected projects: $AFFECTED"
 
       - name: Run SonarQube for affected projects
         run: |
+          FAILED_PROJECTS=""
+
           for project in ${{ steps.affected.outputs.affected_projects }}; do
             echo "Processing project: $project"
 
@@ -239,16 +241,76 @@ jobs:
             if [ -f "$project_dir/sonar-project.properties" ]; then
               echo "Running SonarQube scan for $project in $project_dir"
 
+              # Get project key from sonar-project.properties
+              PROJECT_KEY=$(grep "sonar.projectKey" "$project_dir/sonar-project.properties" | cut -d'=' -f2)
+
               # Run sonar-scanner from project directory
-              docker run --rm \
+              echo "Running SonarQube scanner..."
+              if ! docker run --rm \
                 -e SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" \
                 -e SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}" \
                 -v "$(pwd)/$project_dir:/usr/src" \
-                sonarsource/sonar-scanner-cli
+                sonarsource/sonar-scanner-cli; then
+                echo "❌ SonarQube scanner failed for $project"
+                FAILED_PROJECTS="$FAILED_PROJECTS $project"
+                continue
+              fi
+
+              echo "✅ Scanner completed successfully"
+
+              # Wait for SonarQube to process the analysis and check Quality Gate
+              echo "Checking Quality Gate status for $PROJECT_KEY..."
+
+              MAX_ATTEMPTS=12
+              ATTEMPT=0
+              QG_FOUND=false
+
+              while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+                sleep 5
+                ATTEMPT=$((ATTEMPT + 1))
+
+                QG_RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+                  "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=$PROJECT_KEY")
+
+                # Check if response is valid JSON
+                if echo "$QG_RESPONSE" | jq empty 2>/dev/null; then
+                  QG_STATUS=$(echo "$QG_RESPONSE" | jq -r '.projectStatus.status // empty' 2>/dev/null)
+
+                  if [ -n "$QG_STATUS" ]; then
+                    QG_FOUND=true
+
+                    if [ "$QG_STATUS" = "OK" ]; then
+                      echo "✅ Quality Gate passed for $project"
+                      break
+                    elif [ "$QG_STATUS" = "ERROR" ]; then
+                      echo "❌ Quality Gate failed for $project"
+                      echo "Failed conditions:"
+                      echo "$QG_RESPONSE" | jq '.projectStatus.conditions[] | select(.status == "ERROR")'
+                      FAILED_PROJECTS="$FAILED_PROJECTS $project"
+                      break
+                    else
+                      echo "⚠️ Unexpected Quality Gate status: $QG_STATUS"
+                    fi
+                  fi
+                fi
+              done
+
+              if [ "$QG_FOUND" = false ]; then
+                echo "❌ Quality Gate check timed out for $project after 60 seconds"
+                FAILED_PROJECTS="$FAILED_PROJECTS $project"
+              fi
             else
               echo "No sonar-project.properties found in $project_dir, skipping"
             fi
           done
+
+          # Fail if any project failed Quality Gate
+          if [ -n "$FAILED_PROJECTS" ]; then
+            echo "❌ The following projects failed Quality Gate:$FAILED_PROJECTS"
+            exit 1
+          fi
+
+          echo "✅ All projects passed Quality Gate"
 
   status:
     name: CI Status

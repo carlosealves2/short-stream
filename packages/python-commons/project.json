@@ -6,14 +6,14 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run pytest",
+        "command": "uv run --extra dev pytest || [ $? -eq 5 ] && echo 'No tests found' || exit $?",
         "cwd": "packages/python-commons"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run ruff check .",
+        "command": "uv run --extra dev ruff check .",
         "cwd": "packages/python-commons"
       }
     },
@@ -27,7 +27,7 @@
     "type-check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run mypy .",
+        "command": "uv run --extra dev mypy .",
         "cwd": "packages/python-commons"
       }
     }

@@ -4,8 +4,8 @@ import "./globals.css";
 import { Logo } from "@/components/Logo";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
-import { ScrollButtons } from "@/components/ScrollButtons";
 import { AudioProvider } from "@/contexts/AudioContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,13 +32,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AudioProvider>
-          <Logo />
-          <Sidebar />
-          <Header />
-          <ScrollButtons />
-          <main>{children}</main>
-        </AudioProvider>
+        <AuthProvider>
+          <AudioProvider>
+            <Logo />
+            <Sidebar />
+            <Header />
+            <main>{children}</main>
+          </AudioProvider>
+        </AuthProvider>
       </body>
     </html>
   );

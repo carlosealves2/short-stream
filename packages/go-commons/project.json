@@ -13,7 +13,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "go test ./... -v -coverprofile=coverage.out",
+        "command": "if [ -n \"$(find . -name '*.go' -not -path './vendor/*' | head -1)\" ]; then go test ./... -v -coverprofile=coverage.out; else echo 'No Go files found, skipping tests'; fi",
         "cwd": "packages/go-commons"
       }
     },
@@ -27,7 +27,7 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "golangci-lint run ./...",
+        "command": "if [ -n \"$(find . -name '*.go' -not -path './vendor/*' | head -1)\" ]; then golangci-lint run ./...; else echo 'No Go files found, skipping lint'; fi",
         "cwd": "packages/go-commons"
       }
     }

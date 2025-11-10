@@ -3,6 +3,7 @@
 import { useVideos } from '@/hooks/useVideos';
 import { VideoFeed } from '@/components/VideoFeed';
 import { EmptyState } from '@/components/EmptyState';
+import { ScrollButtons } from '@/components/ScrollButtons';
 
 export default function Home() {
   const { videos, loading, error } = useVideos(1, 10);
@@ -58,5 +59,10 @@ export default function Home() {
   }
 
   // Main content
-  return <VideoFeed videos={videos} />;
+  return (
+    <>
+      <ScrollButtons />
+      <VideoFeed videos={videos} />
+    </>
+  );
 }

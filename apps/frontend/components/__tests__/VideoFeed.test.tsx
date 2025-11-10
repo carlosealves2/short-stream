@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@/__tests__/utils/testUtils';
+import { render, screen, waitFor, act } from '@/__tests__/utils/testUtils';
 import { VideoFeed } from '../VideoFeed';
 import { mockVideos } from '@/__tests__/fixtures/mockVideos';
 import { ProcessedVideo } from '@/lib/types';
@@ -128,8 +128,10 @@ describe('VideoFeed', () => {
       };
       mockEntry.target.setAttribute('data-index', '1');
 
-      // Call the observer callback
-      observeCallback([mockEntry] as unknown as IntersectionObserverEntry[], {} as IntersectionObserver);
+      // Call the observer callback wrapped in act
+      act(() => {
+        observeCallback([mockEntry] as unknown as IntersectionObserverEntry[], {} as IntersectionObserver);
+      });
 
       rerender(<VideoFeed videos={mockVideos} />);
 
@@ -156,7 +158,9 @@ describe('VideoFeed', () => {
       };
       mockEntry.target.setAttribute('data-index', '1');
 
-      observeCallback([mockEntry] as unknown as IntersectionObserverEntry[], {} as IntersectionObserver);
+      act(() => {
+        observeCallback([mockEntry] as unknown as IntersectionObserverEntry[], {} as IntersectionObserver);
+      });
 
       rerender(<VideoFeed videos={mockVideos} />);
 

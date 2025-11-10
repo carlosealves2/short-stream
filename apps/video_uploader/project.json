@@ -7,7 +7,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/video_uploader"],
       "options": {
-        "command": "go build -o ../../dist/apps/video_uploader/main ./cmd",
+        "command": "if [ -d ./cmd ] && [ -n \"$(find ./cmd -name '*.go' | head -1)\" ]; then go build -o ../../dist/apps/video_uploader/main ./cmd; else echo 'No cmd directory or Go files found, skipping build'; fi",
         "cwd": "apps/video_uploader"
       },
       "dependsOn": ["^build"]
@@ -15,14 +15,14 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "go test ./... -v -coverprofile=coverage.out",
+        "command": "if [ -n \"$(find . -name '*.go' -not -path './vendor/*' | head -1)\" ]; then go test ./... -v -coverprofile=coverage.out; else echo 'No Go files found, skipping tests'; fi",
         "cwd": "apps/video_uploader"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "golangci-lint run ./...",
+        "command": "if [ -n \"$(find . -name '*.go' -not -path './vendor/*' | head -1)\" ]; then golangci-lint run ./...; else echo 'No Go files found, skipping lint'; fi",
         "cwd": "apps/video_uploader"
       }
     },
