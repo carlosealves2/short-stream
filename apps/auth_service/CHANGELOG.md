@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.2](https://github.com/carlosealves2/short-stream/compare/auth-service-v0.1.1...auth-service-v0.1.2) (2025-11-10)
+
+
+### Features
+
+* **auth:** implement OIDC RP-Initiated Logout ([a2e7350](https://github.com/carlosealves2/short-stream/commit/a2e73507cffd0d2aa581c2831abd14498c53ee96))
+
+
+### Bug Fixes
+
+* **ci:** fix auth-service logout tests and node-commons build ([6ae23d8](https://github.com/carlosealves2/short-stream/commit/6ae23d8228e8a8c07d61407c8b68823bab8039a5))
+* **oidc:** fix linter issues in test helpers ([c2c4261](https://github.com/carlosealves2/short-stream/commit/c2c42619b40244c8e9bc4b1e1c271efbe3011661))
+
+
+### Code Refactoring
+
+* **handlers:** extract cookie names to constants ([4e2d006](https://github.com/carlosealves2/short-stream/commit/4e2d0063325c1385f4698e107a1a32f24ed13019))
+
 ## [0.1.1](https://github.com/carlosealves2/short-stream/compare/auth-service-v0.1.0...auth-service-v0.1.1) (2025-11-07)
 
 

@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.3](https://github.com/carlosealves2/short-stream/compare/frontend-v0.1.2...frontend-v0.1.3) (2025-11-10)
+
+
+### Features
+
+* **frontend:** add authenticated user header with dropdown menu ([9444e50](https://github.com/carlosealves2/short-stream/commit/9444e50903cec9a46594104bcc2ed251548b26df))
+* **frontend:** add authentication flow and protected routes ([8fca635](https://github.com/carlosealves2/short-stream/commit/8fca635db3140941e73757305a5f214a328c85d3))
+* **frontend:** implement user profile and settings pages ([586b535](https://github.com/carlosealves2/short-stream/commit/586b535c0085f6e9456e08f445845681c9fdfd5c))
+
+
+### Bug Fixes
+
+* **frontend:** add navigation functionality to sidebar buttons ([9190eb5](https://github.com/carlosealves2/short-stream/commit/9190eb5fea0f7982abeaa38a13fd9814ea95c240))
+* **frontend:** fix TypeScript errors in profile page ([b826861](https://github.com/carlosealves2/short-stream/commit/b826861bb88db3f66bb9bb81efeebd1131da39c7))
+
+
+### Code Refactoring
+
+* **frontend:** convert require to async import in config tests ([9bc0289](https://github.com/carlosealves2/short-stream/commit/9bc0289a3b98293c89f995f999b04aceadc992a2))
+
 ## [0.1.2](https://github.com/carlosealves2/short-stream/compare/frontend-v0.1.1...frontend-v0.1.2) (2025-11-09)
 
 
