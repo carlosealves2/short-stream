@@ -10,6 +10,8 @@ on:
       - 'feature/**'
       - 'fix/**'
       - 'hotfix/**'
+    branches-ignore:
+      - 'release-please--**'
   workflow_dispatch:
     inputs:
       branch:
