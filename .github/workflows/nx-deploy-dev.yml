@@ -1,13 +1,10 @@
 name: Deploy Dev - Docker Hub
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - develop
-    paths:
-      - 'apps/**'
-      - 'packages/**'
-      - '.github/workflows/nx-deploy-dev.yml'
   workflow_dispatch:
     inputs:
       app:
@@ -26,8 +23,8 @@ jobs:
   detect-affected:
     name: Detect Affected Apps
     runs-on: ubuntu-latest
-    # Skip for release-please commits
-    if: ${{ !contains(github.event.head_commit.message, 'chore(main): release') }}
+    # Only run when PR from release-please branch is merged
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release-please--')
     outputs:
       affected-apps: ${{ steps.affected.outputs.apps }}
       has-affected: ${{ steps.affected.outputs.has-affected }}
